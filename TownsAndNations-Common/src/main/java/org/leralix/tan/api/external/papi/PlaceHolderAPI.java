@@ -12,7 +12,7 @@ import java.util.Map;
 public class PlaceHolderAPI extends PlaceholderExpansion {
 
 
-    static final String PLACEHOLDER_NOT_FOUND = "[TAN] Placeholder not found";
+    public static final String PLACEHOLDER_NOT_FOUND = "[TAN] Placeholder not found";
 
     private final Map<String, PapiEntry> entries;
 
