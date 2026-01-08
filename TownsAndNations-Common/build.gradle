@@ -4,7 +4,7 @@ plugins {
 }
 
 jar {
-    archiveBaseName = 'TownsAndNations'
+    enabled = false
 }
 
 shadowJar {
@@ -13,10 +13,10 @@ shadowJar {
 
 tasks.shadowJar {
     archiveClassifier.set('')
-    relocate("dev.triumphteam.gui", "dev.triumphteam.gui")
-    relocate 'net.objecthunter.exp4j', 'org.leralix.tan.libs.exp4j'
-    relocate 'org.bstats', 'org.leralix.tan.bstat'
-    relocate 'com.mysql', 'org.leralix.shadow.mysql'
+}
+
+tasks.build {
+    dependsOn tasks.shadowJar
 }
 
 group = 'org.tan'
