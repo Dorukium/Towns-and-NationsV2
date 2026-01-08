@@ -534,7 +534,7 @@ kingdom_upgrades:
     prerequisites:
       TOWN_LEVEL: 0
     benefits:
-      CHUNK_CAP: infinity
+      CHUNK_CAP: 0
       CHUNK_COST: 1
       AUTHORIZED_BIOMES: [ 'ALL' ]
       CHUNK_UPKEEP_COST: 0.1
