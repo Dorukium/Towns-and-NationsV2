@@ -45,7 +45,14 @@ public class PlayerApplicationMenu extends IteratorGUI {
         List<GuiItem> guiItems = new ArrayList<>();
         for (String playerUUID : townData.getPlayerJoinRequestSet()) {
 
-            OfflinePlayer playerIterate = Bukkit.getOfflinePlayer(UUID.fromString(playerUUID));
+            UUID parsedUuid;
+            try {
+                parsedUuid = UUID.fromString(playerUUID);
+            } catch (IllegalArgumentException e) {
+                continue;
+            }
+
+            OfflinePlayer playerIterate = Bukkit.getOfflinePlayer(parsedUuid);
             ITanPlayer playerIterateData = PlayerDataStorage.getInstance().get(playerUUID);
             guiItems.add(iconManager.get(playerIterate)
                     .setClickToAcceptMessage(
@@ -62,13 +69,22 @@ public class PlayerApplicationMenu extends IteratorGUI {
                                 TanChatUtils.message(player, Lang.INVITATION_TOWN_FULL.get(tanPlayer), NOT_ALLOWED);
                                 return;
                             }
+                            if (playerIterateData == null) {
+                                townData.removePlayerJoinRequest(playerUUID);
+                                open();
+                                return;
+                            }
                             townData.addPlayer(playerIterateData);
                         } else if (action.isRightClick()) {
                             if (!townData.doesPlayerHavePermission(tanPlayer, RolePermission.KICK_PLAYER)) {
                                 TanChatUtils.message(player, Lang.PLAYER_NO_PERMISSION.get(tanPlayer));
                                 return;
                             }
-                            townData.removePlayerJoinRequest(playerIterateData.getID());
+                            if (playerIterateData == null) {
+                                townData.removePlayerJoinRequest(playerUUID);
+                            } else {
+                                townData.removePlayerJoinRequest(playerIterateData.getID());
+                            }
                         }
                         open();
                     })

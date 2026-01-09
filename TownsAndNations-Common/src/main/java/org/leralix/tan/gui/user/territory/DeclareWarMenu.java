@@ -47,6 +47,9 @@ public class DeclareWarMenu extends IteratorGUI {
         for (String TerritoryID : territoryData.getRelations().getTerritoriesIDWithRelation(TownRelation.WAR)) {
             TerritoryData iterateTerritory = TerritoryUtil.getTerritory(TerritoryID);
 
+            if (iterateTerritory == null) {
+                continue;
+            }
             res.add(getDeclareWarButton(iterateTerritory, warStorage));
         }
         return res;

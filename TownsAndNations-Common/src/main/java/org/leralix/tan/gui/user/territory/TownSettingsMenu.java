@@ -175,7 +175,8 @@ public class TownSettingsMenu extends SettingsMenus {
                 .setAction(event -> {
                     event.setCancelled(true);
                     if (townData.isCapital()) {
-                        TanChatUtils.message(player, Lang.CANNOT_DELETE_TERRITORY_IF_CAPITAL.get(tanPlayer, townData.getOverlord().get().getBaseColoredName()));
+                        String overlordName = townData.getOverlord().map(overlord -> overlord.getBaseColoredName()).orElse("-");
+                        TanChatUtils.message(player, Lang.CANNOT_DELETE_TERRITORY_IF_CAPITAL.get(tanPlayer, overlordName));
                         return;
                     }
 
