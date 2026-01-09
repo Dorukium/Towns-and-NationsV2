@@ -47,6 +47,10 @@ public class LandmarkUpdateServer extends SubCommand {
             TanChatUtils.message(commandSender, Lang.ALL_LANDMARK_UPDATED);
         } else {
             Landmark landmark = instance.get(args[1]);
+            if (landmark == null) {
+                TanChatUtils.message(commandSender, Lang.LANDMARK_NOT_FOUND);
+                return;
+            }
             landmark.generateResources();
             TanChatUtils.message(commandSender, Lang.LANDMARK_UPDATED.get(landmark.getName(), landmark.getID()));
         }

@@ -63,6 +63,10 @@ public class ApplyTownServer extends SubCommand {
             return;
         }
         TownData townData = TownDataStorage.getInstance().get(townID);
+        if (townData == null) {
+            TanChatUtils.message(commandSender, Lang.TOWN_NOT_FOUND);
+            return;
+        }
         townData.addPlayerJoinRequest(p);
     }
 }

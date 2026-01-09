@@ -55,7 +55,14 @@ public class LandmarkSetStoredLimitServer extends SubCommand {
                 return;
             }
 
-            landmark.setStoredLimit(Integer.parseInt(value));
+            int parsedValue;
+            try {
+                parsedValue = Integer.parseInt(value);
+            } catch (NumberFormatException e) {
+                TanChatUtils.message(commandSender, Lang.INVALID_ARGUMENTS);
+                return;
+            }
+            landmark.setStoredLimit(parsedValue);
             TanChatUtils.message(commandSender, Lang.LANDMARK_STORED_UPDATED.get(landmark.getName(), landmark.getID(), value));
         }
     }
