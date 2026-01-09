@@ -19,11 +19,16 @@ public class PlayerDeleteKingdomDAO extends NewsletterSubDAO<KingdomDeletedNews>
 
     @Override
     protected void createTableIfNotExists() {
-        NewsletterDaoSqlUtil.createTableIfNotExists(
-                dataSource,
-                TABLE_NAME,
-                "playerID VARCHAR(36) NOT NULL, oldKingdomName VARCHAR(36) NOT NULL"
-        );
+        String sql = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME + " (" +
+                "id VARCHAR(36) PRIMARY KEY, " +
+                "playerID VARCHAR(36) NOT NULL, " +
+                "oldKingdomName VARCHAR(36) NOT NULL)";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new NewsletterDaoException("Failed to create " + TABLE_NAME + " table", e);
+        }
     }
 
     @Override
@@ -59,6 +64,13 @@ public class PlayerDeleteKingdomDAO extends NewsletterSubDAO<KingdomDeletedNews>
 
     @Override
     public void delete(UUID id) {
-        NewsletterDaoSqlUtil.deleteById(dataSource, TABLE_NAME, id);
+        String sql = "DELETE FROM " + TABLE_NAME + " WHERE id = ?";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setObject(1, id);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new NewsletterDaoException("Failed to delete newsletter from " + TABLE_NAME, e);
+        }
     }
 }

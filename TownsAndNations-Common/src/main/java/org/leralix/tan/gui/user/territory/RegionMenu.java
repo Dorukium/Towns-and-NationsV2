@@ -43,7 +43,11 @@ public class RegionMenu extends TerritoryMenu {
     }
 
     private GuiItem getSettingsButton() {
-        return createSettingsButton(Lang.GUI_REGION_SETTINGS_ICON_DESC1.get(), p -> new RegionSettingsMenu(player, regionData));
+        return IconManager.getInstance().get(IconKey.TERRITORY_SETTINGS_ICON)
+                .setName(Lang.GUI_TOWN_SETTINGS_ICON.get(tanPlayer.getLang()))
+                .setDescription(Lang.GUI_REGION_SETTINGS_ICON_DESC1.get())
+                .setAction(event -> new RegionSettingsMenu(player, regionData))
+                .asGuiItem(player, langType);
     }
 
 

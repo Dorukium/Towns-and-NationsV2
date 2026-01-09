@@ -66,7 +66,15 @@ public class TownClaimedChunk extends TerritoryChunk {
 
         ITanPlayer tanPlayer = PlayerDataStorage.getInstance().get(player);
 
-        TerritoryEnterMessageUtil.sendEnterTerritoryMessage(player, townTo, displayTerritoryColor);
+        TextComponent name = displayTerritoryColor ? townTo.getCustomColoredName() : new TextComponent(townTo.getBaseColoredName());
+        String message = Lang.PLAYER_ENTER_TERRITORY_CHUNK.get(tanPlayer.getPlayer(), name.toLegacyText());
+        player.sendTitle("", message, 5, 40, 20);
+
+        TextComponent textComponent = new TextComponent(townTo.getDescription());
+        textComponent.setColor(ChatColor.GRAY);
+        textComponent.setItalic(true);
+
+        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, textComponent);
 
 
         TownData playerTown = tanPlayer.getTown();
