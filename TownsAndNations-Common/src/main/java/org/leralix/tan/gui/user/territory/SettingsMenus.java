@@ -140,6 +140,7 @@ public abstract class SettingsMenus extends BasicGui {
                             FortStorage.getInstance().getOwnedFort(territoryData).forEach(Fort::updateFlag);
                             SoundUtil.playSound(player, SoundEnum.MINOR_GOOD);
                             open();
+                            return;
                         }
                         SoundUtil.playSound(player, SoundEnum.NOT_ALLOWED);
                     }

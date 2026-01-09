@@ -100,10 +100,11 @@ public class RegionSettingsMenu extends SettingsMenus {
     }
 
     private @NotNull GuiItem getChangeOwnershipButton() {
+        String capitalName = regionData.getCapital() == null ? "-" : regionData.getCapital().getName();
         return iconManager.get(IconKey.REGION_CHANGE_OWNERSHIP_ICON)
                 .setName(Lang.GUI_REGION_CHANGE_CAPITAL.get(tanPlayer))
                 .setDescription(
-                        Lang.GUI_REGION_CHANGE_CAPITAL_DESC1.get(regionData.getCapital().getName())
+                        Lang.GUI_REGION_CHANGE_CAPITAL_DESC1.get(capitalName)
                 )
                 .setClickToAcceptMessage(Lang.GUI_REGION_CHANGE_CAPITAL_DESC2)
                 .setAction(event -> {
