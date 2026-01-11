@@ -1,6 +1,4 @@
 rootProject.name = 'TownsAndNations'
-include 'TanApi'
-
 
 include 'TownsAndNations-API'
 include 'TownsAndNations-Common'
