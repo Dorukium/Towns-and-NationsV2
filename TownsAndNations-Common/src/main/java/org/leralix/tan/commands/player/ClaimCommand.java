@@ -19,12 +19,12 @@ public class ClaimCommand extends AbstractTerritoryClaimCommand {
     }
 
     public int getArguments() {
-        return 1;
+        return 2;
     }
 
     @Override
     public String getSyntax() {
-        return "/tan claim <town/region/kingdom>";
+        return "/tan claim <town/region/nation|kingdom>";
     }
 
     @Override
