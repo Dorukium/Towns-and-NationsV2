@@ -27,26 +27,27 @@ public final class TerritoryCommandUtil {
         }
         if (tanPlayer.hasKingdom()) {
             suggestions.add("kingdom");
+            suggestions.add("nation");
         }
         return suggestions;
     }
 
     public static TerritoryData resolveTerritory(Player player, ITanPlayer tanPlayer, String territoryArg, String syntax) {
-        if (territoryArg.equals("town")) {
+        if (territoryArg.equalsIgnoreCase("town")) {
             if (!tanPlayer.hasTown()) {
                 TanChatUtils.message(player, Lang.PLAYER_NO_TOWN.get(player));
                 return null;
             }
             return tanPlayer.getTown();
         }
-        if (territoryArg.equals("region")) {
+        if (territoryArg.equalsIgnoreCase("region")) {
             if (!tanPlayer.hasRegion()) {
                 TanChatUtils.message(player, Lang.PLAYER_NO_REGION.get(player));
                 return null;
             }
             return tanPlayer.getRegion();
         }
-        if (territoryArg.equals("kingdom")) {
+        if (territoryArg.equalsIgnoreCase("kingdom") || territoryArg.equalsIgnoreCase("nation")) {
             if (!tanPlayer.hasKingdom()) {
                 TanChatUtils.message(player, Lang.PLAYER_NO_KINGDOM.get(player));
                 return null;
@@ -54,7 +55,9 @@ public final class TerritoryCommandUtil {
             return tanPlayer.getKingdom();
         }
 
-        TanChatUtils.message(player, Lang.CORRECT_SYNTAX_INFO.get(syntax).getDefault());
+        LangType langType = LangType.of(player);
+        TanChatUtils.message(player, Lang.SYNTAX_ERROR.get(langType));
+        TanChatUtils.message(player, Lang.CORRECT_SYNTAX_INFO.get(langType, syntax));
         return null;
     }
 
