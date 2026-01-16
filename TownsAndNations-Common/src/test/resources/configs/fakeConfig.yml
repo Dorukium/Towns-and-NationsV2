@@ -61,6 +61,14 @@ maxPayDistance: 15
 #The amount of money a player starts with (only works if no external economy plugin is used)
 StartingMoney: 100.0
 
+tributeLimits:
+  enabled: false
+  perPlayerDailyLimit: 50000.0
+  perVassalDailyLimit: 400000.0
+
+#The cost of creating a Kingdom
+kingdomCost: 7500
+
 ########################
 ##      Kingdoms      ##
 ########################

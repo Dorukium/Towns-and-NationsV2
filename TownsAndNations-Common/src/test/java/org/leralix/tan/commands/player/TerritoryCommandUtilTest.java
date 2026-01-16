@@ -4,11 +4,11 @@ import org.bukkit.entity.Player;
 import org.junit.jupiter.api.Test;
 import org.leralix.tan.BasicTest;
 import org.leralix.tan.dataclass.ITanPlayer;
-import org.leralix.tan.dataclass.territory.NationData;
+import org.leralix.tan.dataclass.territory.KingdomData;
 import org.leralix.tan.dataclass.territory.RegionData;
 import org.leralix.tan.dataclass.territory.TerritoryData;
 import org.leralix.tan.dataclass.territory.TownData;
-import org.leralix.tan.storage.stored.NationDataStorage;
+import org.leralix.tan.storage.stored.KingdomDataStorage;
 import org.leralix.tan.storage.stored.PlayerDataStorage;
 import org.leralix.tan.storage.stored.RegionDataStorage;
 import org.leralix.tan.storage.stored.TownDataStorage;
@@ -25,18 +25,20 @@ public class TerritoryCommandUtilTest extends BasicTest {
 
         TownData town = TownDataStorage.getInstance().newTown("TestTown", tanPlayer);
         RegionData region = RegionDataStorage.getInstance().createNewRegion("TestRegion", town);
-        NationData nation = NationDataStorage.getInstance().createNewNation("TestNation", region);
+        KingdomData kingdom = KingdomDataStorage.getInstance().createNewKingdom("TestKingdom", region);
 
         assertNotNull(town);
         assertNotNull(region);
-        assertNotNull(nation);
+        assertNotNull(kingdom);
 
-        TerritoryData resolvedTown = TerritoryCommandUtil.resolveTerritory(bukkitPlayer, tanPlayer, "TOWN", "/tan claimarea <town/region/nation>");
-        TerritoryData resolvedRegion = TerritoryCommandUtil.resolveTerritory(bukkitPlayer, tanPlayer, "ReGiOn", "/tan claimarea <town/region/nation>");
-        TerritoryData resolvedNation = TerritoryCommandUtil.resolveTerritory(bukkitPlayer, tanPlayer, "nation", "/tan claimarea <town/region/nation>");
+        TerritoryData resolvedTown = TerritoryCommandUtil.resolveTerritory(bukkitPlayer, tanPlayer, "TOWN", "/tan claimarea <town/region/nation|kingdom>");
+        TerritoryData resolvedRegion = TerritoryCommandUtil.resolveTerritory(bukkitPlayer, tanPlayer, "ReGiOn", "/tan claimarea <town/region/nation|kingdom>");
+        TerritoryData resolvedNationAlias = TerritoryCommandUtil.resolveTerritory(bukkitPlayer, tanPlayer, "nation", "/tan claimarea <town/region/nation|kingdom>");
+        TerritoryData resolvedKingdom = TerritoryCommandUtil.resolveTerritory(bukkitPlayer, tanPlayer, "KiNgDoM", "/tan claimarea <town/region/nation|kingdom>");
 
         assertEquals(town, resolvedTown);
         assertEquals(region, resolvedRegion);
-        assertEquals(nation, resolvedNation);
+        assertEquals(kingdom, resolvedNationAlias);
+        assertEquals(kingdom, resolvedKingdom);
     }
 }
