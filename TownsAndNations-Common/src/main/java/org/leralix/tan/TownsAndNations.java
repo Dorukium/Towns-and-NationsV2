@@ -171,10 +171,14 @@ public class TownsAndNations extends JavaPlugin {
 
         getLogger().log(Level.INFO, "[TaN] -Loading Local data");
 
+        NationDataStorage.getInstance();
         RegionDataStorage.getInstance();
         PlayerDataStorage.getInstance();
         NewClaimedChunkStorage.getInstance();
         TownDataStorage.getInstance();
+        if (Constants.enableNation()) {
+            NationDataStorage.getInstance();
+        }
         LandmarkStorage.getInstance();
         NewsletterStorage.getInstance();
         WarStorage.getInstance();
@@ -339,9 +343,10 @@ public class TownsAndNations extends JavaPlugin {
      * This method is called when the plugin is enabled.
      */
     private void checkForUpdate() {
+        // In case of any error, we consider the plugin is up to date
+        latestVersion = CURRENT_VERSION;
         if (!TownsAndNations.getPlugin().getConfig().getBoolean("CheckForUpdate", true)) {
             getLogger().info("[TaN] Update check is disabled");
-            latestVersion = CURRENT_VERSION;
             return;
         }
         try {
@@ -374,7 +379,6 @@ public class TownsAndNations extends JavaPlugin {
             }
         } catch (Exception e) {
             getLogger().log(Level.WARNING, "[TaN] An error occurred while trying to check for updates.", e);
-            latestVersion = CURRENT_VERSION;
         }
     }
 
@@ -434,8 +438,12 @@ public class TownsAndNations extends JavaPlugin {
         RegionDataStorage.getInstance().reset();
         PlayerDataStorage.getInstance().reset();
         TownDataStorage.getInstance().reset();
+        if (Constants.enableNation()) {
+            NationDataStorage.getInstance().reset();
+        }
         LandmarkStorage.getInstance().reset();
         WarStorage.getInstance().reset();
         NewClaimedChunkStorage.getInstance().reset();
     }
 }
+

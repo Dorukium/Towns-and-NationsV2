@@ -62,18 +62,22 @@ maxPayDistance: 15
 StartingMoney: 100.0
 
 ########################
-##      Kingdoms      ##
+##      Nations      ##
 ########################
 
-#Enable Kingdoms
-EnableKingdom: true
+#Enable Nations
+EnableNation: true
 
+tributeLimits:
+  enabled: false
+  perPlayerDailyLimit: 50000
+  perVassalDailyLimit: 400000
 
 ########################
 ##       Regions      ##
 ########################
 
-#Enable Region (will automatically disable Kingdoms)
+#Enable Region (will automatically disable Nations)
 EnableRegion: true
 
 #The cost of creating a Region

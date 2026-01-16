@@ -3,7 +3,7 @@ package org.leralix.tan.dataclass;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import org.leralix.tan.dataclass.territory.KingdomData;
+import org.leralix.tan.dataclass.territory.NationData;
 import org.leralix.tan.dataclass.territory.RegionData;
 import org.leralix.tan.dataclass.territory.TerritoryData;
 import org.leralix.tan.dataclass.territory.TownData;
@@ -51,16 +51,6 @@ public interface ITanPlayer {
 
     RegionData getRegion();
 
-    boolean hasKingdom();
-
-    KingdomData getKingdom();
-
-    RankData getKingdomRank();
-
-    Integer getKingdomRankID();
-
-    void setKingdomRankID(Integer rankID);
-
     UUID getUUID();
 
     void joinTown(TownData townData);
@@ -101,6 +91,16 @@ public interface ITanPlayer {
     Integer getRegionRankID();
 
     void setRegionRankID(Integer rankID);
+
+    NationData getNation();
+
+    boolean hasNation();
+
+    RankData getNationRank();
+
+    Integer getNationRankID();
+
+    void setNationRankID(Integer rankID);
 
     Integer getRankID(TerritoryData territoryData);
 

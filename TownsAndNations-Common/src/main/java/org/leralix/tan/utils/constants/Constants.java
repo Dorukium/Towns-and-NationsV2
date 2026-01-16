@@ -6,7 +6,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.leralix.tan.TownsAndNations;
 import org.leralix.tan.dataclass.Range;
 import org.leralix.tan.dataclass.chunk.ChunkType;
-import org.leralix.tan.dataclass.territory.KingdomData;
+import org.leralix.tan.dataclass.territory.NationData;
 import org.leralix.tan.dataclass.territory.RegionData;
 import org.leralix.tan.dataclass.territory.TerritoryData;
 import org.leralix.tan.dataclass.territory.TownData;
@@ -33,6 +33,8 @@ public class Constants {
     private static int nbDaysBeforeClearningTransactions;
     private static int nbDaysBeforeClearningNewsletter;
     private static NewsletterScopeConfig newsletterScopeConfig;
+    private static String falsePlaceholderString;
+    private static String truePlaceholderString;
     //Economy
     private static boolean useStandaloneEconomy;
     private static double startingBalance;
@@ -55,12 +57,12 @@ public class Constants {
     private static int townCost;
     private static int townMaxNameSize;
     private static int townMaxDescriptionSize;
-    private static int kingdomCost;
-    private static int kingdomMaxNameSize;
-    private static int kingdomMaxDescriptionSize;
     private static int regionCost;
     private static int regionMaxNameSize;
     private static int regionMaxDescriptionSize;
+    private static int nationCost;
+    private static int nationMaxNameSize;
+    private static int nationMaxDescriptionSize;
     private static int maxRankSize;
     private static int rankNameSize;
     private static boolean displayTerritoryColor;
@@ -74,12 +76,12 @@ public class Constants {
     private static boolean enableNation;
     private static boolean enableRegion;
     private static int changeTownNameCost;
-    private static int changeKingdomNameCost;
+    private static int changeNationNameCost;
     private static int changeRegionNameCost;
     private static boolean worldGuardOverrideWilderness;
     private static boolean worldGuardOverrideTown;
     private static boolean worldGuardOverrideRegion;
-    private static boolean worldGuardOverrideKingdom;
+    private static boolean worldGuardOverrideNation;
     private static boolean worldGuardOverrideLandmark;
 
     //Buildings
@@ -130,7 +132,7 @@ public class Constants {
 
     private static boolean allowNonAdjacentChunksForTown;
     private static boolean allowNonAdjacentChunksForRegion;
-    private static boolean allowNonAdjacentChunksForKingdom;
+    private static boolean allowNonAdjacentChunksForNation;
     private static double claimLandmarkCost;
     private static boolean landmarkClaimRequiresEncirclement;
 
@@ -147,7 +149,7 @@ public class Constants {
     private static NewUpgradeStorage upgradeStorage;
     private static int townMaxLevel;
     private static int regionMaxLevel;
-    private static int kingdomMaxLevel;
+    private static int nationMaxLevel;
 
     public static void init(FileConfiguration config, FileConfiguration upgradeConfig) {
 
@@ -159,6 +161,9 @@ public class Constants {
         nbDaysBeforeClearningTransactions = config.getInt("nbDaysBeforeTransactionDeletion", 90);
         nbDaysBeforeClearningNewsletter = config.getInt("TimeBeforeClearingNewsletter");
         newsletterScopeConfig = new NewsletterScopeConfig(config.getConfigurationSection("events"));
+        var placeholdersSection = config.getConfigurationSection("placeholderString");
+        falsePlaceholderString = placeholdersSection.getString("falseValue", "false");
+        truePlaceholderString = placeholdersSection.getString("trueValue", "true");
         //Economy
         useStandaloneEconomy = config.getBoolean("UseTanEconomy", false);
         startingBalance = config.getDouble("StartingMoney", 100.0);
@@ -179,12 +184,12 @@ public class Constants {
         townCost = config.getInt("townCost", 1000);
         townMaxNameSize = config.getInt("TownNameSize", 45);
         townMaxDescriptionSize = config.getInt("TownDescSize", 55);
-        kingdomCost = config.getInt("kingdomCost", 25000);
-        kingdomMaxNameSize = config.getInt("KingdomNameSize", 45);
-        kingdomMaxDescriptionSize = config.getInt("KingdomDescSize", 55);
         regionCost = config.getInt("regionCost", 7500);
         regionMaxNameSize = config.getInt("RegionNameSize", 45);
         regionMaxDescriptionSize = config.getInt("RegionDescSize", 55);
+        nationCost = config.getInt("nationCost", 50000);
+        nationMaxNameSize = config.getInt("NationNameSize", 45);
+        nationMaxDescriptionSize = config.getInt("NationDescSize", 55);
         maxRankSize = config.getInt("maxRanks", 9);
         rankNameSize = config.getInt("RankNameSize", 40);
 
@@ -196,16 +201,16 @@ public class Constants {
         relationAfterSurrender = getRelation(config.getString("relationAfterSurrender","NEUTRAL"));
         mobChunkSpawnStorage = new MobChunkSpawnStorage(config.getConfigurationSection("CancelMobSpawnInTown"));
 
-        enableNation = config.getBoolean("EnableKingdom", true);
+        enableNation = config.getBoolean("EnableNation", true);
         enableRegion = config.getBoolean("EnableRegion", true);
         changeTownNameCost = config.getInt("ChangeTownNameCost", 1000);
-        changeKingdomNameCost = config.getInt("ChangeKingdomNameCost", 1000);
+        changeNationNameCost = config.getInt("ChangeNationNameCost", 1000);
         changeRegionNameCost = config.getInt("ChangeRegionNameCost", 1000);
         nbDigits = config.getInt("DecimalDigits", 2);
         worldGuardOverrideWilderness = config.getBoolean("worldguard_override_wilderness", true);
         worldGuardOverrideTown = config.getBoolean("worldguard_override_town", true);
         worldGuardOverrideRegion = config.getBoolean("worldguard_override_region", true);
-        worldGuardOverrideKingdom = config.getBoolean("worldguard_override_kingdom", worldGuardOverrideRegion);
+        worldGuardOverrideNation = config.getBoolean("worldguard_override_nation", worldGuardOverrideRegion);
         worldGuardOverrideLandmark = config.getBoolean("worldguard_override_landmark", true);
         claimLandmarkCost = config.getDouble("claimLandmarkCost", 500.0);
         if (claimLandmarkCost < 0.0) {
@@ -284,7 +289,7 @@ public class Constants {
 
         allowNonAdjacentChunksForRegion = config.getBoolean("RegionAllowNonAdjacentChunks", false);
         allowNonAdjacentChunksForTown = config.getBoolean("TownAllowNonAdjacentChunks", false);
-        allowNonAdjacentChunksForKingdom = config.getBoolean("KingdomAllowNonAdjacentChunks", allowNonAdjacentChunksForRegion);
+        allowNonAdjacentChunksForNation = config.getBoolean("NationAllowNonAdjacentChunks", allowNonAdjacentChunksForRegion);
 
         //Landmarks
         landmarkStorageCapacity = config.getInt("landmarkStorageCapacity", 7);
@@ -300,7 +305,7 @@ public class Constants {
         upgradeStorage = new NewUpgradeStorage(upgradeConfig);
         townMaxLevel = upgradeConfig.getInt("TownMaxLevel", 10);
         regionMaxLevel = upgradeConfig.getInt("RegionMaxLevel", 10);
-        kingdomMaxLevel = upgradeConfig.getInt("KingdomMaxLevel", 10);
+        nationMaxLevel = upgradeConfig.getInt("NationMaxLevel", 10);
 
     }
 
@@ -362,6 +367,14 @@ public class Constants {
         return newsletterScopeConfig;
     }
 
+    public static String getFalsePlaceholderString() {
+        return falsePlaceholderString;
+    }
+
+    public static String getTruePlaceholderString() {
+        return truePlaceholderString;
+    }
+
     public static boolean displayTerritoryColor() {
         return displayTerritoryColor;
     }
@@ -414,8 +427,8 @@ public class Constants {
         if (territoryData instanceof TownData) {
             return changeTownNameCost;
         }
-        if (territoryData instanceof KingdomData) {
-            return changeKingdomNameCost;
+        if (territoryData instanceof NationData) {
+            return changeNationNameCost;
         }
         if (territoryData instanceof RegionData) {
             return changeRegionNameCost;
@@ -432,7 +445,7 @@ public class Constants {
             case WILDERNESS -> worldGuardOverrideWilderness;
             case TOWN -> worldGuardOverrideTown;
             case REGION -> worldGuardOverrideRegion;
-            case KINGDOM -> worldGuardOverrideKingdom;
+            case NATION -> worldGuardOverrideNation;
             case LANDMARK -> worldGuardOverrideLandmark;
         };
     }
@@ -567,8 +580,8 @@ public class Constants {
         if (territoryData instanceof RegionData) {
             return allowNonAdjacentChunksForRegion;
         }
-        if (territoryData instanceof KingdomData) {
-            return allowNonAdjacentChunksForKingdom;
+        if (territoryData instanceof NationData) {
+            return allowNonAdjacentChunksForNation;
         }
         return false;
     }
@@ -613,16 +626,16 @@ public class Constants {
         return townMaxDescriptionSize;
     }
 
-    public static int getKingdomCost() {
-        return kingdomCost;
+    public static int getNationCost() {
+        return nationCost;
     }
 
-    public static int getKingdomMaxNameSize() {
-        return kingdomMaxNameSize;
+    public static int getNationMaxNameSize() {
+        return nationMaxNameSize;
     }
 
-    public static int getKingdomMaxDescriptionSize() {
-        return kingdomMaxDescriptionSize;
+    public static int getNationMaxDescriptionSize() {
+        return nationMaxDescriptionSize;
     }
 
     public static int getRegionCost() {
@@ -705,8 +718,8 @@ public class Constants {
         if(territoryData instanceof TownData){
             return townMaxLevel;
         }
-        if(territoryData instanceof KingdomData){
-            return kingdomMaxLevel;
+        if(territoryData instanceof NationData){
+            return nationMaxLevel;
         }
         return regionMaxLevel;
     }
