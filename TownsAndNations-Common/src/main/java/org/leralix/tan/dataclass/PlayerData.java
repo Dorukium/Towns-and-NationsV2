@@ -4,7 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import org.leralix.tan.dataclass.territory.KingdomData;
+import org.leralix.tan.dataclass.territory.NationData;
 import org.leralix.tan.dataclass.territory.RegionData;
 import org.leralix.tan.dataclass.territory.TerritoryData;
 import org.leralix.tan.dataclass.territory.TownData;
@@ -35,7 +35,7 @@ public class PlayerData implements ITanPlayer {
     private String TownId;
     private Integer townRankID;
     private Integer regionRankID;
-    private Integer kingdomRankID;
+    private Integer nationRankID;
     private List<String> propertiesListID;
     private List<String> attackInvolvedIn;
     private LangType lang;
@@ -48,7 +48,7 @@ public class PlayerData implements ITanPlayer {
         this.TownId = null;
         this.townRankID = null;
         this.regionRankID = null;
-        this.kingdomRankID = null;
+        this.nationRankID = null;
         this.propertiesListID = new ArrayList<>();
         this.attackInvolvedIn = new ArrayList<>();
     }
@@ -136,32 +136,7 @@ public class PlayerData implements ITanPlayer {
     public RegionData getRegion() {
         if (!hasRegion())
             return null;
-        return getTown().getRegion();
-    }
-
-    @Override
-    public boolean hasKingdom() {
-        RegionData region = getRegion();
-        if (region == null) {
-            return false;
-        }
-        return region.getOverlord().isPresent() && region.getOverlord().get() instanceof KingdomData;
-    }
-
-    @Override
-    public KingdomData getKingdom() {
-        if (!hasKingdom()) {
-            return null;
-        }
-        return (KingdomData) getRegion().getOverlord().get();
-    }
-
-    @Override
-    public RankData getKingdomRank() {
-        if (!hasKingdom()) {
-            return null;
-        }
-        return getKingdom().getRank(getKingdomRankID());
+        return getTown().getRegion().orElse(null);
     }
 
     public UUID getUUID() {
@@ -295,34 +270,8 @@ public class PlayerData implements ITanPlayer {
     }
 
     @Override
-    public Integer getKingdomRankID() {
-        if (!hasKingdom()) {
-            return null;
-        }
-        if (kingdomRankID == null) {
-            kingdomRankID = getKingdom().getDefaultRankID();
-        }
-        return kingdomRankID;
-    }
-
     public void setRegionRankID(Integer rankID) {
-        this.regionRankID = rankID;
-    }
-
-    @Override
-    public void setKingdomRankID(Integer rankID) {
-        this.kingdomRankID = rankID;
-    }
-
-    public Integer getRankID(TerritoryData territoryData) {
-        if (territoryData instanceof TownData) {
-            return getTownRankID();
-        } else if (territoryData instanceof RegionData) {
-            return getRegionRankID();
-        } else if (territoryData instanceof KingdomData) {
-            return getKingdomRankID();
-        }
-        return null;
+        regionRankID = rankID;
     }
 
     @Override
@@ -338,8 +287,8 @@ public class PlayerData implements ITanPlayer {
         if (hasRegion()) {
             territories.add(getRegion());
         }
-        if (hasKingdom()) {
-            territories.add(getKingdom());
+        if (hasNation()) {
+            territories.add(getNation());
         }
         return territories;
     }
@@ -365,15 +314,15 @@ public class PlayerData implements ITanPlayer {
         }
     }
 
-    public void setRankID(TerritoryData territoryData, Integer defaultRankID) {
+    public void setRankID(TerritoryData territoryData, Integer newRank) {
         if(territoryData instanceof TownData){
-            setTownRankID(defaultRankID);
+            setTownRankID(newRank);
         }
         if(territoryData instanceof RegionData){
-            setRegionRankID(defaultRankID);
+            setRegionRankID(newRank);
         }
-        if(territoryData instanceof KingdomData){
-            setKingdomRankID(defaultRankID);
+        if(territoryData instanceof NationData){
+            setNationRankID(newRank);
         }
 
     }
@@ -398,6 +347,58 @@ public class PlayerData implements ITanPlayer {
         }
 
         return res;
+    }
+
+    @Override
+    public NationData getNation() {
+
+        var optTown = getTown();
+        if(optTown == null){
+            return null;
+        }
+        var optRegion = optTown.getRegion();
+        return optRegion.flatMap(RegionData::getNation).orElse(null);
+    }
+
+    @Override
+    public boolean hasNation() {
+        return getNation() != null;
+    }
+
+    @Override
+    public RankData getNationRank() {
+        if (!hasNation())
+            return null;
+        return getNation().getRank(getNationRankID());
+    }
+
+    @Override
+    public Integer getNationRankID() {
+        if(!hasNation()){
+            return null;
+        }
+        if (nationRankID == null)
+            nationRankID = getNation().getDefaultRankID();
+        return nationRankID;
+    }
+
+    @Override
+    public void setNationRankID(Integer rankID) {
+        this.nationRankID = rankID;
+    }
+
+    @Override
+    public Integer getRankID(TerritoryData territoryData) {
+        if(territoryData instanceof TownData){
+            return getTownRankID();
+        }
+        if(territoryData instanceof RegionData){
+            return getRegionRankID();
+        }
+        if(territoryData instanceof NationData){
+            return getNationRankID();
+        }
+        return null;
     }
 
 }

@@ -30,10 +30,8 @@ import java.util.*;
 
 public class RegionData extends TerritoryData {
 
-
     private String leaderID;
     private String capitalID;
-    private String nationID;
     private final Set<String> townsInRegion;
 
     public RegionData(String id, String name, ITanPlayer owner) {
@@ -41,7 +39,6 @@ public class RegionData extends TerritoryData {
         TownData ownerTown = owner.getTown();
 
         this.capitalID = ownerTown.getID();
-        this.nationID = null;
 
         this.townsInRegion = new HashSet<>();
 
@@ -120,24 +117,6 @@ public class RegionData extends TerritoryData {
     }
 
     @Override
-    public boolean haveOverlord() {
-        migrateLegacyOverlordIdIfNeeded();
-        return super.haveOverlord();
-    }
-
-    @Override
-    public Optional<TerritoryData> getOverlord() {
-        migrateLegacyOverlordIdIfNeeded();
-        return super.getOverlord();
-    }
-
-    @Override
-    public void setOverlord(TerritoryData overlord) {
-        super.setOverlord(overlord);
-        nationID = overlord == null ? null : overlord.getID();
-    }
-
-    @Override
     public void abstractClaimChunk(Player player, Chunk chunk, boolean ignoreAdjacent) {
 
         removeFromBalance(getClaimCost());
@@ -146,9 +125,10 @@ public class RegionData extends TerritoryData {
 
     @Override
     protected Collection<TerritoryData> getOverlords() {
-        List<TerritoryData> overlords = new ArrayList<>();
-        getOverlord().ifPresent(overlords::add);
-        return overlords;
+        if (!haveOverlord()) {
+            return new ArrayList<>();
+        }
+        return Collections.singletonList(getOverlord().orElse(null));
     }
 
     public List<TerritoryData> getSubjects() {
@@ -175,16 +155,8 @@ public class RegionData extends TerritoryData {
 
     @Override
     public void removeOverlordPrivate() {
-        // Kingdoms are not implemented yet
-        nationID = null;
-    }
-
-    private void migrateLegacyOverlordIdIfNeeded() {
-        if (overlordID == null && nationID != null) {
-            overlordID = nationID;
-        }
-        if (overlordID != null && nationID == null) {
-            nationID = overlordID;
+        for (ITanPlayer tanPlayer : getITanPlayerList()) {
+            tanPlayer.setNationRankID(null);
         }
     }
 
@@ -317,4 +289,12 @@ public class RegionData extends TerritoryData {
         budget.addProfitLine(new SubjectTaxLine(this));
     }
 
+    public Optional<NationData> getNation() {
+        var optNation = getOverlord();
+        if (optNation.isPresent() && optNation.get() instanceof NationData nationData) {
+            return Optional.of(nationData);
+        }
+        return Optional.empty();
+
+    }
 }

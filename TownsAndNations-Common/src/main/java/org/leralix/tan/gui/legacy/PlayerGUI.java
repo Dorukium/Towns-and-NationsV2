@@ -9,7 +9,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.leralix.tan.dataclass.ITanPlayer;
 import org.leralix.tan.dataclass.Landmark;
-import org.leralix.tan.dataclass.territory.KingdomData;
+import org.leralix.tan.dataclass.territory.NationData;
 import org.leralix.tan.dataclass.territory.RegionData;
 import org.leralix.tan.dataclass.territory.TerritoryData;
 import org.leralix.tan.dataclass.territory.TownData;
@@ -18,16 +18,12 @@ import org.leralix.tan.gui.cosmetic.IconKey;
 import org.leralix.tan.gui.cosmetic.IconManager;
 import org.leralix.tan.gui.landmark.LandmarkNoOwnerMenu;
 import org.leralix.tan.gui.landmark.LandmarkOwnedMenu;
-import org.leralix.tan.gui.user.territory.KingdomMenu;
-import org.leralix.tan.gui.user.territory.NoKingdomMenu;
-import org.leralix.tan.gui.user.territory.NoRegionMenu;
-import org.leralix.tan.gui.user.territory.NoTownMenu;
-import org.leralix.tan.gui.user.territory.RegionMenu;
-import org.leralix.tan.gui.user.territory.TownMenu;
+import org.leralix.tan.gui.user.territory.*;
 import org.leralix.tan.gui.user.territory.hierarchy.VassalsMenu;
 import org.leralix.tan.lang.Lang;
 import org.leralix.tan.listeners.chat.PlayerChatListenerStorage;
 import org.leralix.tan.listeners.chat.events.DonateToTerritory;
+import org.leralix.tan.listeners.chat.events.DonateToOverlordWithLimit;
 import org.leralix.tan.storage.stored.PlayerDataStorage;
 import org.leralix.tan.storage.stored.RegionDataStorage;
 import org.leralix.tan.storage.stored.TownDataStorage;
@@ -48,13 +44,13 @@ public class PlayerGUI {
         throw new IllegalStateException("Utility class");
     }
 
-    public static void dispatchPlayerKingdom(Player player) {
+    public static void dispatchPlayerNation(Player player) {
         ITanPlayer tanPlayer = PlayerDataStorage.getInstance().get(player);
-        KingdomData kingdomData = tanPlayer.getKingdom();
-        if (kingdomData != null) {
-            new KingdomMenu(player, kingdomData);
+        NationData nationData = tanPlayer.getNation();
+        if (nationData != null) {
+            new NationMenu(player, nationData);
         } else {
-            new NoKingdomMenu(player);
+            new NoNationMenu(player);
         }
     }
 
@@ -182,8 +178,8 @@ public class PlayerGUI {
             }
 
             if (territoryData.isCapital()) {
-                if (overlord instanceof KingdomData) {
-                    TanChatUtils.message(player, Lang.CANNOT_DECLARE_INDEPENDENCE_BECAUSE_KINGDOM_CAPITAL.get(tanPlayer, territoryData.getBaseColoredName()));
+                if (overlord instanceof NationData) {
+                    TanChatUtils.message(player, Lang.CANNOT_DECLARE_INDEPENDENCE_BECAUSE_NATION_CAPITAL.get(tanPlayer, territoryData.getBaseColoredName()));
                 } else {
                     TanChatUtils.message(player, Lang.CANNOT_DECLARE_INDEPENDENCE_BECAUSE_CAPITAL.get(tanPlayer, territoryData.getBaseColoredName()));
                 }
@@ -195,9 +191,9 @@ public class PlayerGUI {
                     Lang.GUI_CONFIRM_DECLARE_INDEPENDENCE.get(territoryData.getBaseColoredName(), overlord.getBaseColoredName()),
                     () -> {
                         territoryData.removeOverlord();
-                        if (overlord instanceof KingdomData) {
-                            territoryData.broadcastMessageWithSound(Lang.REGION_BROADCAST_REGION_LEFT_KINGDOM.get(territoryData.getName(), overlord.getName()), BAD);
-                            overlord.broadCastMessage(Lang.KINGDOM_BROADCAST_REGION_LEFT_KINGDOM.get(territoryData.getName()));
+                        if (overlord instanceof NationData) {
+                            territoryData.broadcastMessageWithSound(Lang.REGION_BROADCAST_REGION_LEFT_NATION.get(territoryData.getName(), overlord.getName()), BAD);
+                            overlord.broadCastMessage(Lang.NATION_BROADCAST_REGION_LEFT_NATION.get(territoryData.getName()));
                         } else {
                             territoryData.broadcastMessageWithSound(Lang.TOWN_BROADCAST_TOWN_LEFT_REGION.get(territoryData.getName(), overlord.getName()), BAD);
                             overlord.broadCastMessage(Lang.REGION_BROADCAST_TOWN_LEFT_REGION.get(territoryData.getName()));
@@ -218,7 +214,12 @@ public class PlayerGUI {
         return ItemBuilder.from(donateToOverlord).asGuiItem(event -> {
             event.setCancelled(true);
             TanChatUtils.message(player, Lang.WRITE_IN_CHAT_AMOUNT_OF_MONEY_FOR_DONATION.get(tanPlayer));
-            PlayerChatListenerStorage.register(player, new DonateToTerritory(overlord));
+            TownData townData = TownDataStorage.getInstance().get(player);
+            if (townData == null) {
+                PlayerChatListenerStorage.register(player, new DonateToTerritory(overlord));
+                return;
+            }
+            PlayerChatListenerStorage.register(player, new DonateToOverlordWithLimit(townData, overlord));
         });
     }
 
@@ -230,9 +231,9 @@ public class PlayerGUI {
                     Lang.VASSAL_GUI_DESC1.get(tanPlayer, territoryData.getBaseColoredName(), Integer.toString(territoryData.getVassalCount()))
             );
 
-            gui.setItem(2, 6, IconManager.getInstance().get((territoryData instanceof KingdomData) ? IconKey.REGION_BASE_ICON : IconKey.TOWN_BASE_ICON)
-                    .setName((territoryData instanceof KingdomData) ? Lang.GUI_KINGDOM_REGION_LIST.get(tanPlayer) : Lang.GUI_REGION_TOWN_LIST.get(tanPlayer))
-                    .setDescription((territoryData instanceof KingdomData) ? Lang.GUI_KINGDOM_REGION_LIST_DESC1.get() : Lang.GUI_REGION_TOWN_LIST_DESC1.get())
+            gui.setItem(2, 6, IconManager.getInstance().get((territoryData instanceof NationData) ? IconKey.REGION_BASE_ICON : IconKey.TOWN_BASE_ICON)
+                    .setName((territoryData instanceof NationData) ? Lang.GUI_NATION_REGION_LIST.get(tanPlayer) : Lang.GUI_REGION_TOWN_LIST.get(tanPlayer))
+                    .setDescription((territoryData instanceof NationData) ? Lang.GUI_NATION_REGION_LIST_DESC1.get() : Lang.GUI_REGION_TOWN_LIST_DESC1.get())
                     .setAction(event -> new VassalsMenu(player, territoryData))
                     .asGuiItem(player, tanPlayer.getLang()));
 
