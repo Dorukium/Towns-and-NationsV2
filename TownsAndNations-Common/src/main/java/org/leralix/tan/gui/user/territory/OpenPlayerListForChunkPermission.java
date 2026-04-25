@@ -5,10 +5,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import org.leralix.tan.dataclass.ClaimedChunkSettings;
-import org.leralix.tan.dataclass.territory.TerritoryData;
-import org.leralix.tan.enums.RolePermission;
-import org.leralix.tan.enums.permissions.ChunkPermissionType;
+import org.leralix.tan.data.territory.Territory;
+import org.leralix.tan.data.territory.permission.ChunkPermissionType;
+import org.leralix.tan.data.territory.permission.IClaimedChunkSettings;
+import org.leralix.tan.data.territory.rank.RolePermission;
 import org.leralix.tan.gui.BasicGui;
 import org.leralix.tan.gui.IteratorGUI;
 import org.leralix.tan.gui.cosmetic.IconKey;
@@ -24,12 +24,12 @@ import static org.leralix.lib.data.SoundEnum.NOT_ALLOWED;
 
 public class OpenPlayerListForChunkPermission extends IteratorGUI {
 
-    private final TerritoryData territoryData;
+    private final Territory territoryData;
     private final ChunkPermissionType chunkPermissionType;
-    private final ClaimedChunkSettings chunkPermission;
+    private final IClaimedChunkSettings chunkPermission;
     private final BasicGui backMenu;
 
-    public OpenPlayerListForChunkPermission(Player player, TerritoryData territoryData, ChunkPermissionType type, BasicGui backMenu) {
+    public OpenPlayerListForChunkPermission(Player player, Territory territoryData, ChunkPermissionType type, BasicGui backMenu) {
         super(player, type.getLabel(), 3);
         this.territoryData = territoryData;
         this.chunkPermissionType = type;
@@ -63,8 +63,8 @@ public class OpenPlayerListForChunkPermission extends IteratorGUI {
     private List<GuiItem> getAuthorizedPlayer() {
         List<GuiItem> guiItems = new ArrayList<>();
 
-        for (String authorizedPlayerID : chunkPermission.getChunkPermissions().get(chunkPermissionType).getAuthorizedPlayers()) {
-            OfflinePlayer authorizedPlayer = Bukkit.getOfflinePlayer(UUID.fromString(authorizedPlayerID));
+        for (UUID authorizedPlayerID : chunkPermission.getChunkPermissions().get(chunkPermissionType).getAuthorizedPlayers()) {
+            OfflinePlayer authorizedPlayer = Bukkit.getOfflinePlayer(authorizedPlayerID);
 
             guiItems.add(iconManager.get(authorizedPlayer)
                     .setName(authorizedPlayer.getName())

@@ -3,7 +3,7 @@ package org.leralix.tan.utils.constants;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
-import org.leralix.tan.enums.permissions.ChunkPermissionType;
+import org.leralix.tan.data.territory.permission.ChunkPermissionType;
 
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -47,7 +47,7 @@ public class WildernessRules {
         rules.put(worldName, worldRules);
     }
 
-    public Boolean canPlayerDoInWilderness(World world, ChunkPermissionType permissionType) {
+    public boolean canPlayerDoInWilderness(World world, ChunkPermissionType permissionType) {
         if(!rules.containsKey(world.getName())) {
             return rules.get("default").get(permissionType);
         }

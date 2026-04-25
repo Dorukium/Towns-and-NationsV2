@@ -10,15 +10,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.leralix.lib.SphereLib;
 import org.leralix.lib.position.Vector3D;
+import org.leralix.tan.BasicTest;
 import org.leralix.tan.TownsAndNations;
-import org.leralix.tan.dataclass.ITanPlayer;
-import org.leralix.tan.dataclass.PropertyData;
-import org.leralix.tan.dataclass.territory.TownData;
-import org.leralix.tan.storage.stored.PlayerDataStorage;
-import org.leralix.tan.storage.stored.TownDataStorage;
+import org.leralix.tan.data.building.property.PropertyData;
+import org.leralix.tan.data.player.ITanPlayer;
+import org.leralix.tan.data.territory.Town;
 import org.leralix.tan.utils.gameplay.ItemStackSerializer;
 import org.mockbukkit.mockbukkit.MockBukkit;
-import org.mockbukkit.mockbukkit.ServerMock;
 import org.mockito.MockedStatic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,15 +24,17 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mockStatic;
 
-class ChangePropertySalePriceTest {
+class ChangePropertySalePriceTest extends BasicTest {
 
     private Player player;
+    private ITanPlayer tanPlayer;
     private PropertyData propertyData;
     private MockedStatic<ItemStackSerializer> mockedSerializer;
-    private TownsAndNations townsAndNations;
 
+    @Override
     @BeforeEach
-    void setUp() {
+    protected void setUp() {
+        super.setUp();
 
         mockedSerializer = mockStatic(ItemStackSerializer.class);
         mockedSerializer.when(() -> ItemStackSerializer.serializeItemStack(any(ItemStack.class)))
@@ -49,16 +49,14 @@ class ChangePropertySalePriceTest {
                     return new ItemStack(Material.valueOf(arg));
                 });
 
-        ServerMock server = MockBukkit.mock();
-
         MockBukkit.load(SphereLib.class);
         townsAndNations = MockBukkit.load(TownsAndNations.class);
 
 
         player = server.addPlayer();
         World world = server.addSimpleWorld("world");
-        ITanPlayer tanPlayer = PlayerDataStorage.getInstance().get(player);
-        TownData townData = TownDataStorage.getInstance().newTown("town 1");
+        tanPlayer = playerDataStorage.get(player);
+        Town townData = townStorage.newTown("town 1");
 
         propertyData = townData.registerNewProperty(
                 new Vector3D(new Location(world, 0, 0, 0)),
@@ -71,7 +69,6 @@ class ChangePropertySalePriceTest {
     public void tearDown() {
         MockBukkit.unmock();
         mockedSerializer.close();
-        townsAndNations.resetSingletonForTests();
     }
 
     @Test
@@ -79,7 +76,7 @@ class ChangePropertySalePriceTest {
 
         ChangePropertySalePrice changePropertySalePrice = new ChangePropertySalePrice(propertyData, null);
 
-        changePropertySalePrice.execute(player, "1000");
+        changePropertySalePrice.execute(player, tanPlayer, "1000");
 
         assertEquals(1000, propertyData.getPrice());
     }
@@ -89,7 +86,7 @@ class ChangePropertySalePriceTest {
 
         ChangePropertySalePrice changePropertySalePrice = new ChangePropertySalePrice(propertyData, null);
 
-        changePropertySalePrice.execute(player, "1%");
+        changePropertySalePrice.execute(player, tanPlayer, "1%");
 
         assertEquals(0, propertyData.getRentPrice());
     }

@@ -2,7 +2,7 @@ package org.leralix.tan.commands.server;
 
 import org.bukkit.command.CommandSender;
 import org.leralix.lib.commands.SubCommand;
-import org.leralix.tan.dataclass.Landmark;
+import org.leralix.tan.data.building.landmark.Landmark;
 import org.leralix.tan.lang.Lang;
 import org.leralix.tan.storage.stored.LandmarkStorage;
 import org.leralix.tan.utils.text.TanChatUtils;
@@ -11,6 +11,13 @@ import java.util.Collections;
 import java.util.List;
 
 public class LandmarkSetStoredLimitServer extends SubCommand {
+
+    private final LandmarkStorage landmarkStorage;
+
+    public LandmarkSetStoredLimitServer(LandmarkStorage landmarkStorage){
+        this.landmarkStorage = landmarkStorage;
+    }
+
     @Override
     public String getName() {
         return "landmarkSetStoredLimit";
@@ -34,7 +41,7 @@ public class LandmarkSetStoredLimitServer extends SubCommand {
     @Override
     public List<String> getTabCompleteSuggestions(CommandSender commandSender, String s, String[] args) {
         if (args.length == 2) {
-            return LandmarkStorage.getInstance().getAll().values().stream().map(Landmark::getID).toList();
+            return landmarkStorage.getAll().values().stream().map(Landmark::getID).toList();
         }
         return Collections.emptyList();
     }
@@ -44,7 +51,7 @@ public class LandmarkSetStoredLimitServer extends SubCommand {
         if (args.length < 3) {
             TanChatUtils.message(commandSender, Lang.INVALID_ARGUMENTS);
         } else {
-            Landmark landmark = LandmarkStorage.getInstance().get(args[1]);
+            Landmark landmark = landmarkStorage.get(args[1]);
             if(landmark == null){
                 TanChatUtils.message(commandSender, Lang.LANDMARK_NOT_FOUND);
                 return;

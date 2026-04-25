@@ -1,12 +1,12 @@
 package org.leralix.tan.utils.territory;
 
 import org.leralix.lib.position.Vector2D;
-import org.leralix.tan.dataclass.chunk.ClaimedChunk2;
-import org.leralix.tan.dataclass.territory.TerritoryData;
-import org.leralix.tan.dataclass.territory.TownData;
-import org.leralix.tan.storage.stored.FortStorage;
-import org.leralix.tan.storage.stored.NewClaimedChunkStorage;
-import org.leralix.tan.war.fort.Fort;
+import org.leralix.tan.TownsAndNations;
+import org.leralix.tan.data.building.fort.Fort;
+import org.leralix.tan.data.chunk.IClaimedChunk;
+import org.leralix.tan.data.chunk.TerritoryChunk;
+import org.leralix.tan.data.territory.Territory;
+import org.leralix.tan.data.territory.Town;
 
 import java.util.HashSet;
 import java.util.Optional;
@@ -14,15 +14,15 @@ import java.util.Set;
 
 public class ChunkPolygon {
 
-    private final TerritoryData territoryOwner;
-    private final Set<ClaimedChunk2> chunksInPolygon;
+    private final Territory territoryOwner;
+    private final Set<IClaimedChunk> chunksInPolygon;
 
-    public ChunkPolygon(TerritoryData territoryData, Set<ClaimedChunk2> chunksInPolygon) {
+    public ChunkPolygon(Territory territoryData, Set<IClaimedChunk> chunksInPolygon) {
         this.territoryOwner = territoryData;
         this.chunksInPolygon = chunksInPolygon;
     }
 
-    public Set<ClaimedChunk2> getChunksInPolygon() {
+    public Set<IClaimedChunk> getChunksInPolygon() {
         return chunksInPolygon;
     }
 
@@ -31,32 +31,51 @@ public class ChunkPolygon {
         Optional<Vector2D> capitalChunk = resolveCapitalChunk(territoryOwner);
 
 
-        for(ClaimedChunk2 claimedChunk2 : chunksInPolygon){
-            for(Fort fort : FortStorage.getInstance().getOwnedFort(territoryOwner)){
-                if(claimedChunk2.containsPosition(fort.getPosition())){
+        for(IClaimedChunk claimedChunk : chunksInPolygon){
+            for(Fort fort : TownsAndNations.getPlugin().getFortStorage().getOwnedFort(territoryOwner)){
+                if(claimedChunk.containsPosition(fort.getPosition())){
                     return true;
                 }
             }
-            if(capitalChunk.isPresent() && claimedChunk2.getVector2D().equals(capitalChunk.get())){
+            if(capitalChunk.isPresent() && claimedChunk.getVector2D().equals(capitalChunk.get())){
+                return true;
+            }
+            if(isNextToVassal(claimedChunk)){
                 return true;
             }
         }
         return false;
     }
 
-    private static Optional<Vector2D> resolveCapitalChunk(TerritoryData territoryOwner) {
-        if (territoryOwner instanceof TownData townData) {
+    private boolean isNextToVassal(IClaimedChunk claimedChunk) {
+
+        var vassalIDs = territoryOwner.getVassalsID();
+        if(vassalIDs.isEmpty()){
+            return false;
+        }
+
+        for(IClaimedChunk chunkAround : TownsAndNations.getPlugin().getClaimStorage().getFourAjacentChunks(claimedChunk)){
+            if(chunkAround instanceof TerritoryChunk territoryChunk && vassalIDs.contains(territoryChunk.getOwnerID())){
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static Optional<Vector2D> resolveCapitalChunk(Territory territoryOwner) {
+        if (territoryOwner instanceof Town townData) {
             return townData.getCapitalLocation();
         }
 
         Set<String> visited = new HashSet<>();
-        TerritoryData current = territoryOwner;
+        Territory current = territoryOwner;
         while (current != null && visited.add(current.getID())) {
-            TerritoryData capital = current.getCapital();
+            Territory capital = current.getCapital();
             if (capital == null) {
                 return Optional.empty();
             }
-            if (capital instanceof TownData capitalTown) {
+            if (capital instanceof Town capitalTown) {
                 return capitalTown.getCapitalLocation();
             }
             current = capital;
@@ -65,13 +84,13 @@ public class ChunkPolygon {
     }
 
     public void unclaimAll(){
-        for(ClaimedChunk2 claimedChunk2 : chunksInPolygon){
-            NewClaimedChunkStorage.getInstance().unclaimChunk(claimedChunk2);
+        for(IClaimedChunk claimedChunk : chunksInPolygon){
+            TownsAndNations.getPlugin().getClaimStorage().unclaimChunk(claimedChunk);
         }
     }
 
-    public boolean contains(ClaimedChunk2 claimedChunk) {
-        for(ClaimedChunk2 chunkInPolygon : chunksInPolygon){
+    public boolean contains(IClaimedChunk claimedChunk) {
+        for(IClaimedChunk chunkInPolygon : chunksInPolygon){
             if(claimedChunk.equals(chunkInPolygon)){
                 return true;
             }

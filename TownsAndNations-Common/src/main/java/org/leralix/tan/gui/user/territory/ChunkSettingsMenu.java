@@ -4,23 +4,23 @@ import dev.triumphteam.gui.guis.GuiItem;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.leralix.lib.data.SoundEnum;
-import org.leralix.tan.dataclass.territory.TerritoryData;
-import org.leralix.tan.dataclass.territory.TownData;
-import org.leralix.tan.enums.RolePermission;
+import org.leralix.tan.data.territory.Territory;
+import org.leralix.tan.data.territory.Town;
+import org.leralix.tan.data.territory.rank.RolePermission;
+import org.leralix.tan.data.upgrade.rewards.bool.EnableMobBan;
 import org.leralix.tan.gui.BasicGui;
 import org.leralix.tan.gui.cosmetic.IconKey;
 import org.leralix.tan.gui.service.requirements.BooleanStatRequirement;
 import org.leralix.tan.gui.service.requirements.RankPermissionRequirement;
 import org.leralix.tan.lang.Lang;
-import org.leralix.tan.upgrade.rewards.bool.EnableMobBan;
 import org.leralix.tan.utils.deprecated.GuiUtil;
 import org.leralix.tan.utils.text.TanChatUtils;
 
 public class ChunkSettingsMenu extends BasicGui {
 
-    private final TerritoryData territoryData;
+    private final Territory territoryData;
 
-    public ChunkSettingsMenu(Player player, TerritoryData territoryData){
+    public ChunkSettingsMenu(Player player, Territory territoryData){
         super(player, Lang.HEADER_LAND_SETTINGS.get(territoryData.getName()), 3);
         this.territoryData = territoryData;
         open();
@@ -35,14 +35,14 @@ public class ChunkSettingsMenu extends BasicGui {
         gui.setItem(2, 5, getChunkGeneralSettings());
         gui.setItem(2, 7, getChunkMobSpawnSettings());
 
-        gui.setItem(3, 1, GuiUtil.createBackArrow(player, territoryData::openMainMenu));
+        gui.setItem(3, 1, GuiUtil.createBackArrow(player, player1 -> territoryData.openMainMenu(player1, tanPlayer), langType));
 
         gui.open(player);
     }
 
     private GuiItem getChunkIcon() {
         return iconManager.get(IconKey.LANDS_PERMISSION_ICON)
-                .setName(territoryData instanceof TownData ? Lang.GUI_TOWN_CHUNK_PLAYER.get(tanPlayer) : Lang.GUI_TERRITORY_CHUNK_PLAYER.get(tanPlayer))
+                .setName(territoryData instanceof Town ? Lang.GUI_TOWN_CHUNK_PLAYER.get(tanPlayer) : Lang.GUI_TERRITORY_CHUNK_PLAYER.get(tanPlayer))
                 .setRequirements(new RankPermissionRequirement(territoryData, tanPlayer, RolePermission.MANAGE_CLAIM_SETTINGS))
                 .setAction(event -> new TerritoryChunkSettingsMenu(player, territoryData, this))
                 .asGuiItem(player, langType);
@@ -58,7 +58,7 @@ public class ChunkSettingsMenu extends BasicGui {
 
     private GuiItem getChunkMobSpawnSettings(){
         return iconManager.get(IconKey.MOBS_SPAWN_SETTINGS_ICON)
-                .setName(territoryData instanceof TownData ? Lang.GUI_TOWN_CHUNK_MOB.get(tanPlayer) : Lang.GUI_TERRITORY_CHUNK_MOB.get(tanPlayer))
+                .setName(territoryData instanceof Town ? Lang.GUI_TOWN_CHUNK_MOB.get(tanPlayer) : Lang.GUI_TERRITORY_CHUNK_MOB.get(tanPlayer))
                 .setRequirements(
                         new RankPermissionRequirement(territoryData, tanPlayer, RolePermission.MANAGE_CLAIM_SETTINGS),
                         new BooleanStatRequirement<>(territoryData, EnableMobBan.class)
@@ -70,7 +70,7 @@ public class ChunkSettingsMenu extends BasicGui {
                     }
                     else {
                         TanChatUtils.message(player,
-                                (territoryData instanceof TownData ? Lang.TOWN_NOT_ENOUGH_LEVEL : Lang.TERRITORY_NOT_ENOUGH_LEVEL)
+                                (territoryData instanceof Town ? Lang.TOWN_NOT_ENOUGH_LEVEL : Lang.TERRITORY_NOT_ENOUGH_LEVEL)
                                         .get(langType, Lang.UNLOCK_MOB_BAN.get(langType)),
                                 SoundEnum.NOT_ALLOWED);
                     }

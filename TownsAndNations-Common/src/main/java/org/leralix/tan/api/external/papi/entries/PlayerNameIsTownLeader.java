@@ -3,21 +3,38 @@ package org.leralix.tan.api.external.papi.entries;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
-import org.leralix.tan.dataclass.ITanPlayer;
+import org.leralix.tan.data.player.ITanPlayer;
 import org.leralix.tan.lang.Lang;
+import org.leralix.tan.storage.stored.NationStorage;
 import org.leralix.tan.storage.stored.PlayerDataStorage;
+import org.leralix.tan.storage.stored.RegionStorage;
+import org.leralix.tan.storage.stored.TownStorage;
+import org.leralix.tan.utils.constants.Constants;
 
 public class PlayerNameIsTownLeader extends PapiEntry {
 
 
-    public PlayerNameIsTownLeader() {
-        super("player_{}_is_town_overlord");
+    private final PlayerDataStorage playerDataStorage;
+
+    public PlayerNameIsTownLeader(
+            PlayerDataStorage playerDataStorage,
+            TownStorage townStorage,
+            RegionStorage regionDataStorage,
+            NationStorage nationDataStorage
+    ) {
+        super("player_{}_is_town_overlord",
+                playerDataStorage,
+                townStorage,
+                regionDataStorage,
+                nationDataStorage
+        );
+        this.playerDataStorage = playerDataStorage;
     }
 
     @Override
     public String getData(OfflinePlayer player, @NotNull String params) {
 
-        ITanPlayer tanPlayer = PlayerDataStorage.getInstance().get(player.getUniqueId());
+        ITanPlayer tanPlayer = playerDataStorage.get(player.getUniqueId());
 
         if (tanPlayer == null) {
             return PLAYER_NOT_FOUND;
@@ -28,8 +45,8 @@ public class PlayerNameIsTownLeader extends PapiEntry {
         String playerName = values[0];
         if(playerName == null || playerName.isEmpty()) return Lang.INVALID_PLAYER_NAME.get(tanPlayer);
         OfflinePlayer playerSelected = Bukkit.getOfflinePlayer(playerName);
-        ITanPlayer tanPlayer1 = PlayerDataStorage.getInstance().get(playerSelected);
+        ITanPlayer tanPlayer1 = playerDataStorage.get(playerSelected);
         if(tanPlayer1 == null) return Lang.INVALID_NAME.get(tanPlayer);
-        return tanPlayer1.isTownOverlord() ? TRUE: FALSE;
+        return tanPlayer1.isTownOverlord() ? Constants.getTruePlaceholderString(): Constants.getFalsePlaceholderString();
     }
 }

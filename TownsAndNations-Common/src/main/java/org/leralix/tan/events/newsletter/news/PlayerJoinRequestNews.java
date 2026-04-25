@@ -5,19 +5,18 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.leralix.lib.data.SoundEnum;
-import org.leralix.tan.dataclass.ITanPlayer;
-import org.leralix.tan.dataclass.territory.TownData;
+import org.leralix.tan.TownsAndNations;
+import org.leralix.tan.data.player.ITanPlayer;
+import org.leralix.tan.data.territory.Town;
 import org.leralix.tan.events.newsletter.NewsletterType;
 import org.leralix.tan.gui.cosmetic.IconManager;
 import org.leralix.tan.gui.user.territory.PlayerApplicationMenu;
 import org.leralix.tan.lang.Lang;
 import org.leralix.tan.lang.LangType;
-import org.leralix.tan.storage.stored.PlayerDataStorage;
-import org.leralix.tan.storage.stored.TownDataStorage;
 import org.leralix.tan.utils.text.DateUtil;
 import org.leralix.tan.utils.text.TanChatUtils;
 import org.tan.api.interfaces.TanPlayer;
-import org.tan.api.interfaces.TanTown;
+import org.tan.api.interfaces.territory.TanTown;
 
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -25,8 +24,8 @@ import java.util.function.Consumer;
 
 public class PlayerJoinRequestNews extends Newsletter {
 
-    String playerID;
-    String townID;
+    private final String playerID;
+    private final String townID;
 
     public PlayerJoinRequestNews(UUID id, long date, String playerID, String townID) {
         super(id, date);
@@ -36,7 +35,7 @@ public class PlayerJoinRequestNews extends Newsletter {
 
     public PlayerJoinRequestNews(TanPlayer player, TanTown townData) {
         super();
-        this.playerID = player.getUUID().toString();
+        this.playerID = player.getID().toString();
         this.townID = townData.getID();
     }
 
@@ -45,8 +44,8 @@ public class PlayerJoinRequestNews extends Newsletter {
         return NewsletterType.PLAYER_APPLICATION;
     }
 
-    private TownData getTownData() {
-        return TownDataStorage.getInstance().get(townID);
+    private Town getTownData() {
+        return TownsAndNations.getPlugin().getTownStorage().get(townID);
     }
 
     public String getPlayerID() {
@@ -58,36 +57,42 @@ public class PlayerJoinRequestNews extends Newsletter {
     }
 
     @Override
-    public void broadcast(Player player) {
-        ITanPlayer tanPlayer = PlayerDataStorage.getInstance().get(playerID);
-        if (tanPlayer == null)
-            return;
-        TownData townData = TownDataStorage.getInstance().get(townID);
+    public void broadcast(Player player, ITanPlayer tanPlayer) {
+        OfflinePlayer playerJoinRequest = Bukkit.getOfflinePlayer(UUID.fromString(playerID));
+
+        Town townData = getTownData();
         if (townData == null)
             return;
         TanChatUtils.message(player,
                 Lang.PLAYER_APPLICATION_NEWSLETTER.get(
-                        player,
-                        tanPlayer.getNameStored(),
-                        townData.getBaseColoredName()),
+                        tanPlayer,
+                        playerJoinRequest.getName(),
+                        townData.getColoredName()),
                 SoundEnum.MINOR_GOOD);
     }
 
     @Override
     public GuiItem createGuiItem(Player player, LangType lang, Consumer<Player> onClick) {
 
-        TownData townData = getTownData();
+        Town townData = getTownData();
         if (townData == null) {
             return null;
         }
 
-        OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(UUID.fromString(playerID));
+        UUID uuid;
+        try {
+            uuid = UUID.fromString(playerID);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+
+        OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
 
         return IconManager.getInstance().get(offlinePlayer)
                 .setName(Lang.NEWSLETTER_PLAYER_APPLICATION.get(lang, offlinePlayer.getName()))
                 .setDescription(
                         Lang.NEWSLETTER_DATE.get(DateUtil.getRelativeTimeDescription(lang, getDate())),
-                        Lang.NEWSLETTER_PLAYER_APPLICATION_DESC1.get(offlinePlayer.getName(), getTownData().getBaseColoredName()),
+                        Lang.NEWSLETTER_PLAYER_APPLICATION_DESC1.get(offlinePlayer.getName(), getTownData().getColoredName()),
                         Lang.NEWSLETTER_RIGHT_CLICK_TO_MARK_AS_READ.get()
                 )
                 .setAction(action -> {
@@ -101,21 +106,33 @@ public class PlayerJoinRequestNews extends Newsletter {
     }
 
     @Override
-    public GuiItem createConcernedGuiItem(Player player, LangType lang, Consumer<Player> onClick) {
+    public GuiItem createConcernedGuiItem(Player player, ITanPlayer playerData, LangType lang, Consumer<Player> onClick) {
 
-        OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(UUID.fromString(playerID));
+        Town townData = getTownData();
+        if (townData == null) {
+            return null;
+        }
+
+        UUID uuid;
+        try {
+            uuid = UUID.fromString(playerID);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+
+        OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
 
         return IconManager.getInstance().get(offlinePlayer)
                 .setName(Lang.NEWSLETTER_PLAYER_APPLICATION.get(lang, offlinePlayer.getName()))
                 .setDescription(
-                        Lang.NEWSLETTER_PLAYER_APPLICATION_DESC1.get(offlinePlayer.getName(), TownDataStorage.getInstance().get(townID).getBaseColoredName()),
+                        Lang.NEWSLETTER_PLAYER_APPLICATION_DESC1.get(offlinePlayer.getName(), townData.getColoredName()),
                         Lang.NEWSLETTER_PLAYER_APPLICATION_DESC2.get(),
                         Lang.NEWSLETTER_RIGHT_CLICK_TO_MARK_AS_READ.get()
                 )
                 .setAction(action -> {
                     action.setCancelled(true);
                     if (action.isLeftClick()) {
-                        new PlayerApplicationMenu(player, getTownData()).open();
+                        new PlayerApplicationMenu(player, townData);
                     }
                     if (action.isRightClick()) {
                         markAsRead(player);
@@ -126,16 +143,11 @@ public class PlayerJoinRequestNews extends Newsletter {
     }
 
     @Override
-    public boolean shouldShowToPlayer(Player player) {
-        TownData townData = getTownData();
+    public boolean shouldShowToPlayer(ITanPlayer player) {
+        Town townData = getTownData();
         if (townData == null) {
             return false;
         }
         return townData.isPlayerIn(player);
-    }
-
-    @Override
-    public void broadcastConcerned(Player player) {
-        broadcast(player);
     }
 }

@@ -4,17 +4,23 @@ import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.leralix.tan.dataclass.ITanPlayer;
+import org.leralix.tan.data.player.ITanPlayer;
 import org.leralix.tan.storage.stored.PlayerDataStorage;
 import org.leralix.tan.utils.constants.Constants;
 
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Economy class used to register Towns and Nation as the main economy provider.
+ * This {@link Economy} implementation does not use banks or per-world money.
+ */
 public class TanEconomyVault extends TanEconomyStandalone implements Economy {
 
-    public TanEconomyVault() {
-        super();
+    private final PlayerDataStorage playerDataStorage;
+
+    public TanEconomyVault(PlayerDataStorage playerDataStorage) {
+        this.playerDataStorage = playerDataStorage;
     }
 
     @Override
@@ -79,7 +85,7 @@ public class TanEconomyVault extends TanEconomyStandalone implements Economy {
 
     @Override
     public double getBalance(OfflinePlayer offlinePlayer) {
-        return super.getBalance(PlayerDataStorage.getInstance().get(offlinePlayer));
+        return super.getBalance(playerDataStorage.get(offlinePlayer));
     }
 
     @Override
@@ -122,9 +128,9 @@ public class TanEconomyVault extends TanEconomyStandalone implements Economy {
         if(v < 0)
             return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, "Cannot withdraw negative funds");
         if(!has(offlinePlayer, v))
-            return new EconomyResponse(v, PlayerDataStorage.getInstance().get(offlinePlayer).getBalance(), EconomyResponse.ResponseType.FAILURE, "Player does not have enough money");
+            return new EconomyResponse(v, playerDataStorage.get(offlinePlayer).getBalance(), EconomyResponse.ResponseType.FAILURE, "Player does not have enough money");
 
-        ITanPlayer tanPlayer = PlayerDataStorage.getInstance().get(offlinePlayer);
+        ITanPlayer tanPlayer = playerDataStorage.get(offlinePlayer);
         tanPlayer.removeFromBalance((int) v);
         return new EconomyResponse(v, tanPlayer.getBalance(), EconomyResponse.ResponseType.SUCCESS, "");
     }
@@ -146,7 +152,7 @@ public class TanEconomyVault extends TanEconomyStandalone implements Economy {
 
     @Override
     public EconomyResponse depositPlayer(OfflinePlayer offlinePlayer, double v) {
-        ITanPlayer tanPlayer = PlayerDataStorage.getInstance().get(offlinePlayer);
+        ITanPlayer tanPlayer = playerDataStorage.get(offlinePlayer);
         tanPlayer.addToBalance((int) v);
         return new EconomyResponse(v, tanPlayer.getBalance(), EconomyResponse.ResponseType.SUCCESS, "");
     }

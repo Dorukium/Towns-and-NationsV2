@@ -5,7 +5,9 @@ import org.bukkit.entity.Player;
 import org.leralix.lib.commands.SubCommand;
 import org.leralix.tan.lang.Lang;
 import org.leralix.tan.listeners.chat.events.CreateTown;
-import org.leralix.tan.storage.stored.TownDataStorage;
+import org.leralix.tan.storage.stored.PlayerDataStorage;
+import org.leralix.tan.storage.stored.TownStorage;
+import org.leralix.tan.utils.text.NameFilter;
 import org.leralix.tan.utils.text.TanChatUtils;
 
 import java.util.Collections;
@@ -13,6 +15,13 @@ import java.util.List;
 
 class CreateTownServer extends SubCommand {
 
+    private final PlayerDataStorage playerDataStorage;
+    private final TownStorage townStorage;
+
+    public CreateTownServer(PlayerDataStorage playerDataStorage, TownStorage townStorage) {
+        this.playerDataStorage = playerDataStorage;
+        this.townStorage = townStorage;
+    }
 
     @Override
     public String getName() {
@@ -52,16 +61,20 @@ class CreateTownServer extends SubCommand {
         }
         String townName = townNameBuilder.toString().trim();
 
-        Player p = commandSender.getServer().getPlayer(args[1]);
-        if(p == null){
+        if (!NameFilter.validateOrWarn(commandSender, townName, NameFilter.Scope.TOWN)) {
+            return;
+        }
+
+        Player leader = commandSender.getServer().getPlayer(args[1]);
+        if(leader == null){
             TanChatUtils.message(commandSender, Lang.PLAYER_NOT_FOUND);
             return;
         }
-        if(TownDataStorage.getInstance().isNameUsed(townName)){
+        if(townStorage.isNameUsed(townName)){
             TanChatUtils.message(commandSender, Lang.NAME_ALREADY_USED);
             return;
         }
-        new CreateTown(0).createTown(p, townName);
+        new CreateTown(0).createTown(leader, playerDataStorage.get(leader), townName, townStorage);
 
     }
 }

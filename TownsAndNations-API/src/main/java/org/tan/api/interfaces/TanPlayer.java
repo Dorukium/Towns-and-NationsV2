@@ -1,5 +1,11 @@
 package org.tan.api.interfaces;
 
+import org.tan.api.interfaces.buildings.TanProperty;
+import org.tan.api.interfaces.territory.TanNation;
+import org.tan.api.interfaces.territory.TanRegion;
+import org.tan.api.interfaces.territory.TanTown;
+import org.tan.api.interfaces.war.TanWar;
+
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
@@ -14,16 +20,10 @@ public interface TanPlayer {
     String getNameStored();
 
     /**
-     * Set the player name stored in the configuration.
-     * @param name The new name of the player.
-     */
-    void setNameStored(String name);
-
-    /**
      * Get the player UUID.
      * @return The UUID of the player.
      */
-    UUID getUUID();
+    UUID getID();
 
     /**
      * @return True if the player is part of a town, false otherwise.
@@ -32,9 +32,10 @@ public interface TanPlayer {
 
     /**
      * Get the town the player is part of.
-     * @return The town the player is part of or {@link Optional#empty()} if the player is not part of a town.
+     *
+     * @return The town the player is part of or null if the player is not part of a town.
      */
-    Optional<TanTown> getTown();
+    TanTown getTown();
 
     /**
      * @return True if the player is part of a region, false otherwise.
@@ -46,6 +47,17 @@ public interface TanPlayer {
      * @return The region the player is part of or {@link Optional#empty()} if the player is not part of a region.
      */
     TanRegion getRegion();
+
+    /**
+     * Get the nation the player is part of.
+     * @return The nation the player is part of or null if the player is not part of a nation.
+     */
+    TanNation getNation();
+
+    /**
+     * @return True if the player is part of a nation, false otherwise.
+     */
+    boolean hasNation();
 
     /**
      * @return A collection of all the properties owned by the player.
@@ -61,4 +73,9 @@ public interface TanPlayer {
      * @return A collection of all the properties owned by the player for sale.
      */
     Collection<TanProperty> getPropertiesForSale();
+
+    /**
+     * @return A collection of all the wars the player is participating in.
+     */
+    Collection<TanWar> getWarsParticipatingIn();
 }

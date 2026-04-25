@@ -2,15 +2,18 @@ package org.leralix.tan.tasks;
 
 import org.bukkit.scheduler.BukkitRunnable;
 import org.leralix.tan.TownsAndNations;
-import org.leralix.tan.storage.stored.*;
+import org.leralix.tan.storage.stored.json.PremiumStorage;
+import org.leralix.tan.storage.stored.truce.TruceStorage;
 
 public class SaveStats {
 
-    private SaveStats() {
-        throw new IllegalStateException("Utility class");
+    private final TownsAndNations plugin;
+
+    public SaveStats(TownsAndNations plugin) {
+        this.plugin = plugin;
     }
 
-    public static void startSchedule() {
+    public void startSchedule() {
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -19,14 +22,15 @@ public class SaveStats {
         }.runTaskTimer(TownsAndNations.getPlugin(), 0L, 1200L);
     }
 
-    public static void saveAll() {
-        RegionDataStorage.getInstance().save();
-        TownDataStorage.getInstance().save();
-        PlayerDataStorage.getInstance().save();
-        NewClaimedChunkStorage.getInstance().save();
-        LandmarkStorage.getInstance().save();
-        WarStorage.getInstance().save();
-        FortStorage.getInstance().save();
+    public void saveAll() {
+        plugin.getNationStorage().save();
+        plugin.getRegionStorage().save();
+        plugin.getTownStorage().save();
+        plugin.getPlayerDataStorage().save();
+        plugin.getClaimStorage().save();
+        plugin.getLandmarkStorage().save();
+        plugin.getWarStorage().save();
+        plugin.getFortStorage().save();
         PremiumStorage.getInstance().save();
         TruceStorage.getInstance().save();
     }

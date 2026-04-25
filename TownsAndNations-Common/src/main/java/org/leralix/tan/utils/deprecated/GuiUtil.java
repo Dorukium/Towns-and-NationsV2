@@ -11,14 +11,14 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.leralix.lib.data.SoundEnum;
 import org.leralix.lib.utils.SoundUtil;
-import org.leralix.tan.dataclass.ITanPlayer;
+import org.leralix.tan.data.player.ITanPlayer;
 import org.leralix.tan.gui.BasicGui;
 import org.leralix.tan.gui.cosmetic.IconKey;
 import org.leralix.tan.gui.cosmetic.IconManager;
+import org.leralix.tan.gui.scope.DisplayableEnum;
 import org.leralix.tan.lang.FilledLang;
 import org.leralix.tan.lang.Lang;
 import org.leralix.tan.lang.LangType;
-import org.leralix.tan.storage.stored.PlayerDataStorage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,12 +38,16 @@ public class GuiUtil {
                 .create();
     }
 
-    public static GuiItem createBackArrow(Player player, Consumer<Player> openMenuAction) {
-        ItemStack getBackArrow = HeadUtils.createCustomItemStack(Material.ARROW, Lang.GUI_BACK_ARROW.get(player));
-        return ItemBuilder.from(getBackArrow).asGuiItem(event -> {
-            event.setCancelled(true);
-            openMenuAction.accept(player);
-        });
+    public static GuiItem createBackArrow(Player player, Consumer<Player> openMenuAction, LangType langType) {
+
+        return IconManager.getInstance().get(Material.ARROW)
+                .setName(Lang.GUI_BACK_ARROW.get(langType))
+                .setAction(event -> {
+                    event.setCancelled(true);
+                    openMenuAction.accept(player);
+                })
+                .asGuiItem(player, langType);
+
     }
 
     public static GuiItem getUnnamedItem(Material material) {
@@ -59,12 +63,13 @@ public class GuiUtil {
             List<GuiItem> guItems,
             int page,
             Player player,
+            ITanPlayer tanPlayer,
             Consumer<Player> backArrowAction,
             Consumer<Player> nextPageAction,
             Consumer<Player> previousPageAction
     ) {
 
-        createIterator(gui, guItems, page, player, backArrowAction, nextPageAction, previousPageAction, Material.GRAY_STAINED_GLASS_PANE);
+        createIterator(gui, guItems, page, player, tanPlayer, backArrowAction, nextPageAction, previousPageAction, Material.GRAY_STAINED_GLASS_PANE);
     }
 
     public static void createIterator(
@@ -72,6 +77,7 @@ public class GuiUtil {
             List<GuiItem> guItems,
             int page,
             Player player,
+            ITanPlayer tanPlayer,
             Consumer<Player> backArrowAction,
             Consumer<Player> nextPageAction,
             Consumer<Player> previousPageAction,
@@ -81,7 +87,7 @@ public class GuiUtil {
         ItemMeta itemMeta = decorativeGlassPane.getItemMeta();
         itemMeta.setDisplayName("");
         decorativeGlassPane.setItemMeta(itemMeta);
-        createIterator(gui, guItems, page, player, backArrowAction, nextPageAction, previousPageAction, decorativeGlassPane);
+        createIterator(gui, guItems, page, player, tanPlayer, backArrowAction, nextPageAction, previousPageAction, decorativeGlassPane);
     }
 
     public static void createIterator(
@@ -89,6 +95,7 @@ public class GuiUtil {
             List<GuiItem> guItems,
             int page,
             Player player,
+            ITanPlayer tanPlayer,
             Consumer<Player> backArrowAction,
             Consumer<Player> nextPageAction,
             Consumer<Player> previousPageAction,
@@ -120,11 +127,10 @@ public class GuiUtil {
             slot++;
         }
         GuiItem panel = ItemBuilder.from(decorativeGlassPane).asGuiItem(event -> event.setCancelled(true));
-        ITanPlayer tanPlayer = PlayerDataStorage.getInstance().get(player);
 
         int lastRow = gui.getRows();
 
-        gui.setItem(lastRow, 1, GuiUtil.createBackArrow(player, backArrowAction));
+        gui.setItem(lastRow, 1, GuiUtil.createBackArrow(player, backArrowAction, tanPlayer.getLang()));
 
         gui.setItem(lastRow, 7, IconManager.getInstance().get(IconKey.PREVIOUS_PAGE_ICON)
                 .setName(Lang.GUI_PREVIOUS_PAGE.get(tanPlayer))

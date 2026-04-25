@@ -1,11 +1,11 @@
 package org.leralix.tan.gui.service.requirements;
 
 import org.bukkit.entity.Player;
-import org.leralix.tan.dataclass.territory.TerritoryData;
+import org.leralix.tan.data.territory.Territory;
+import org.leralix.tan.data.upgrade.Upgrade;
 import org.leralix.tan.gui.service.requirements.upgrade.ItemRequirementBuilder;
 import org.leralix.tan.lang.Lang;
 import org.leralix.tan.lang.LangType;
-import org.leralix.tan.upgrade.Upgrade;
 import org.leralix.tan.utils.gameplay.InventoryUtil;
 
 import java.util.List;
@@ -14,10 +14,10 @@ public class RessourceRequirement extends IndividualRequirementWithCost {
 
     private final ItemRequirementBuilder info;
     private final Upgrade upgrade;
-    private final TerritoryData territoryData;
+    private final Territory territoryData;
     private final  Player player;
 
-    public RessourceRequirement(ItemRequirementBuilder info, Upgrade upgrade, TerritoryData territoryData, Player player){
+    public RessourceRequirement(ItemRequirementBuilder info, Upgrade upgrade, Territory territoryData, Player player){
         this.info = info;
         this.upgrade = upgrade;
         this.territoryData = territoryData;

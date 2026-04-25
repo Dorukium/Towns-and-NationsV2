@@ -3,31 +3,36 @@ package org.leralix.tan.commands.player;
 import org.bukkit.entity.Player;
 import org.leralix.lib.commands.PlayerSubCommand;
 import org.leralix.lib.data.SoundEnum;
-import org.leralix.tan.dataclass.ITanPlayer;
-import org.leralix.tan.dataclass.territory.KingdomData;
-import org.leralix.tan.dataclass.territory.RegionData;
-import org.leralix.tan.dataclass.territory.TownData;
-import org.leralix.tan.enums.ChatScope;
-import org.leralix.tan.enums.TownRelation;
+import org.leralix.tan.data.player.ITanPlayer;
+import org.leralix.tan.data.territory.Nation;
+import org.leralix.tan.data.territory.Region;
+import org.leralix.tan.data.territory.Town;
+import org.leralix.tan.data.territory.relation.TownRelation;
 import org.leralix.tan.lang.Lang;
 import org.leralix.tan.lang.LangType;
 import org.leralix.tan.storage.LocalChatStorage;
 import org.leralix.tan.storage.stored.PlayerDataStorage;
-import org.leralix.tan.utils.gameplay.TerritoryUtil;
 import org.leralix.tan.utils.text.TanChatUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 public class ChannelChatScopeCommand extends PlayerSubCommand {
 
     private static final String TOWN = "town";
     private static final String ALLIANCE = "alliance";
     private static final String REGION = "region";
-    private static final String KINGDOM = "kingdom";
+    private static final String NATION = "nation";
     private static final String GLOBAL = "global";
+
+    private final PlayerDataStorage playerDataStorage;
+    private final LocalChatStorage localChatStorage;
+
+    public ChannelChatScopeCommand(PlayerDataStorage playerDataStorage, LocalChatStorage localChatStorage) {
+        this.playerDataStorage = playerDataStorage;
+        this.localChatStorage = localChatStorage;
+    }
 
     @Override
     public String getName() {
@@ -45,7 +50,7 @@ public class ChannelChatScopeCommand extends PlayerSubCommand {
 
     @Override
     public String getSyntax() {
-        return "/tan chat <global|alliance|kingdom|region|town> [message]";
+        return "/tan chat <global|alliance|nation|region|town> [message]";
     }
 
     @Override
@@ -56,14 +61,14 @@ public class ChannelChatScopeCommand extends PlayerSubCommand {
             suggestions.add(TOWN);
             suggestions.add(ALLIANCE);
             suggestions.add(REGION);
-            suggestions.add(KINGDOM);
+            suggestions.add(NATION);
         }
         return suggestions;
     }
 
     @Override
     public void perform(Player player, String[] args) {
-        LangType langType = PlayerDataStorage.getInstance().get(player).getLang();
+        LangType langType = playerDataStorage.get(player).getLang();
         if (args.length < 2) {
             TanChatUtils.message(player, Lang.NOT_ENOUGH_ARGS_ERROR.get(langType), SoundEnum.NOT_ALLOWED);
             TanChatUtils.message(player, Lang.CORRECT_SYNTAX_INFO.get(langType, getSyntax()));
@@ -77,14 +82,14 @@ public class ChannelChatScopeCommand extends PlayerSubCommand {
         sendSingleMessage(player, args[1], args);
     }
 
-    private static void registerPlayerToScope(Player player, String channelName) {
-        ITanPlayer tanPlayer = PlayerDataStorage.getInstance().get(player);
+    private void registerPlayerToScope(Player player, String channelName) {
+        ITanPlayer tanPlayer = playerDataStorage.get(player);
         LangType langType = tanPlayer.getLang();
-        ChatScope currentScope = LocalChatStorage.getPlayerChatScope(player);
+        ChatScope currentScope = localChatStorage.getPlayerChatScope(player);
         String normalizedChannelName = channelName.toLowerCase();
         switch (normalizedChannelName) {
             case GLOBAL:
-                LocalChatStorage.removePlayerChatScope(player);
+                localChatStorage.removePlayerChatScope(player);
                 TanChatUtils.message(player, Lang.CHAT_CHANGED.get(langType, channelName));
                 return;
             case TOWN:
@@ -104,29 +109,29 @@ public class ChannelChatScopeCommand extends PlayerSubCommand {
                 }
                 setScope(player, langType, channelName, currentScope, ChatScope.REGION);
                 return;
-            case KINGDOM:
-                if (!tanPlayer.hasKingdom()) {
-                    TanChatUtils.message(player, Lang.PLAYER_NO_KINGDOM.get(langType));
+            case NATION:
+                if (!tanPlayer.hasNation()) {
+                    TanChatUtils.message(player, Lang.PLAYER_NO_NATION.get(langType));
                     return;
                 }
-                setScope(player, langType, channelName, currentScope, ChatScope.KINGDOM);
+                setScope(player, langType, channelName, currentScope, ChatScope.NATION);
                 return;
             default:
                 TanChatUtils.message(player, Lang.CHAT_SCOPE_NOT_FOUND.get(langType, channelName));
         }
     }
 
-    private static void setScope(Player player, LangType langType, String channelName, ChatScope currentScope, ChatScope wantedScope) {
+    private void setScope(Player player, LangType langType, String channelName, ChatScope currentScope, ChatScope wantedScope) {
         if (currentScope == wantedScope) {
             TanChatUtils.message(player, Lang.TOWN_CHAT_ALREADY_IN_CHAT.get(langType, wantedScope.getName(langType)));
             return;
         }
-        LocalChatStorage.setPlayerChatScope(player, wantedScope);
+        localChatStorage.setPlayerChatScope(player, wantedScope);
         TanChatUtils.message(player, Lang.CHAT_CHANGED.get(langType, channelName));
     }
 
     private void sendSingleMessage(Player player, String channelName, String[] words) {
-        ITanPlayer tanPlayer = PlayerDataStorage.getInstance().get(player);
+        ITanPlayer tanPlayer = playerDataStorage.get(player);
         LangType langType = tanPlayer.getLang();
         String message = String.join(" ", Arrays.copyOfRange(words, 2, words.length));
 
@@ -141,8 +146,8 @@ public class ChannelChatScopeCommand extends PlayerSubCommand {
             case REGION:
                 sendRegionMessage(player, tanPlayer, langType, message);
                 return;
-            case KINGDOM:
-                sendKingdomMessage(player, tanPlayer, langType, message);
+            case NATION:
+                sendNationMessage(player, tanPlayer, langType, message);
                 return;
             case TOWN:
                 sendTownMessage(player, tanPlayer, langType, message);
@@ -152,42 +157,42 @@ public class ChannelChatScopeCommand extends PlayerSubCommand {
         }
     }
 
-    private static void sendGlobalMessage(Player player, String message) {
-        if (!LocalChatStorage.isPlayerInChatScope(player.getUniqueId().toString())) {
+    private void sendGlobalMessage(Player player, String message) {
+        if (!localChatStorage.isPlayerInChatScope(player.getUniqueId().toString())) {
             player.chat(message);
             return;
         }
 
-        ChatScope prevScope = LocalChatStorage.getPlayerChatScope(player);
-        LocalChatStorage.removePlayerChatScope(player);
+        ChatScope prevScope = localChatStorage.getPlayerChatScope(player);
+        localChatStorage.removePlayerChatScope(player);
         player.chat(message);
-        LocalChatStorage.setPlayerChatScope(player, prevScope);
+        localChatStorage.setPlayerChatScope(player, prevScope);
     }
 
-    private static void sendAllianceMessage(Player player, ITanPlayer tanPlayer, LangType langType, String message) {
+    private void sendAllianceMessage(Player player, ITanPlayer tanPlayer, LangType langType, String message) {
         if (!tanPlayer.hasTown()) {
             TanChatUtils.message(player, Lang.PLAYER_NO_TOWN.get(langType));
             return;
         }
 
-        TownData playerTown = tanPlayer.getTown();
+        Town playerTown = tanPlayer.getTown();
         if (playerTown == null) {
             return;
         }
 
-        playerTown.getRelations().getTerritoriesIDWithRelation(TownRelation.ALLIANCE)
-                .forEach(territoryID -> Objects.requireNonNull(TerritoryUtil.getTerritory(territoryID))
-                        .broadCastMessage(Lang.CHAT_SCOPE_ALLIANCE_MESSAGE.get(playerTown.getName(), player.getName(), message))
+        playerTown.getRelations().getTerritoriesWithRelation(TownRelation.ALLIANCE)
+                .forEach(territory -> territory.broadCastMessage(
+                        Lang.CHAT_SCOPE_ALLIANCE_MESSAGE.get(playerTown.getName(), player.getName(), message))
                 );
     }
 
-    private static void sendRegionMessage(Player player, ITanPlayer tanPlayer, LangType langType, String message) {
+    private void sendRegionMessage(Player player, ITanPlayer tanPlayer, LangType langType, String message) {
         if (!tanPlayer.hasRegion()) {
             TanChatUtils.message(player, Lang.PLAYER_NO_REGION.get(langType));
             return;
         }
 
-        RegionData regionData = tanPlayer.getRegion();
+        Region regionData = tanPlayer.getRegion();
         if (regionData == null) {
             return;
         }
@@ -195,27 +200,27 @@ public class ChannelChatScopeCommand extends PlayerSubCommand {
         regionData.broadCastMessage(Lang.CHAT_SCOPE_REGION_MESSAGE.get(regionData.getName(), player.getName(), message));
     }
 
-    private static void sendKingdomMessage(Player player, ITanPlayer tanPlayer, LangType langType, String message) {
-        if (!tanPlayer.hasKingdom()) {
-            TanChatUtils.message(player, Lang.PLAYER_NO_KINGDOM.get(langType));
+    private void sendNationMessage(Player player, ITanPlayer tanPlayer, LangType langType, String message) {
+        if (!tanPlayer.hasNation()) {
+            TanChatUtils.message(player, Lang.PLAYER_NO_NATION.get(langType));
             return;
         }
 
-        KingdomData kingdomData = tanPlayer.getKingdom();
-        if (kingdomData == null) {
+        Nation nationData = tanPlayer.getNation();
+        if (nationData == null) {
             return;
         }
 
-        kingdomData.broadCastMessage(Lang.CHAT_SCOPE_KINGDOM_MESSAGE.get(kingdomData.getName(), player.getName(), message));
+        nationData.broadCastMessage(Lang.CHAT_SCOPE_NATION_MESSAGE.get(nationData.getName(), player.getName(), message));
     }
 
-    private static void sendTownMessage(Player player, ITanPlayer tanPlayer, LangType langType, String message) {
+    private void sendTownMessage(Player player, ITanPlayer tanPlayer, LangType langType, String message) {
         if (!tanPlayer.hasTown()) {
             TanChatUtils.message(player, Lang.PLAYER_NO_TOWN.get(langType));
             return;
         }
 
-        TownData townData = tanPlayer.getTown();
+        Town townData = tanPlayer.getTown();
         if (townData == null) {
             return;
         }

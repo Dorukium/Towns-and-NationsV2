@@ -4,8 +4,8 @@ import dev.triumphteam.gui.guis.GuiItem;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.leralix.lib.data.SoundEnum;
-import org.leralix.tan.dataclass.territory.TerritoryData;
-import org.leralix.tan.dataclass.territory.TownData;
+import org.leralix.tan.data.territory.Territory;
+import org.leralix.tan.data.territory.Town;
 import org.leralix.tan.gui.BasicGui;
 import org.leralix.tan.gui.cosmetic.IconKey;
 import org.leralix.tan.lang.Lang;
@@ -14,18 +14,18 @@ import org.leralix.tan.listeners.chat.events.SelectNbChunksForConquer;
 import org.leralix.tan.utils.deprecated.GuiUtil;
 import org.leralix.tan.utils.text.TanChatUtils;
 import org.leralix.tan.war.War;
-import org.leralix.tan.war.legacy.WarRole;
-import org.leralix.tan.war.legacy.wargoals.ConquerWarGoal;
-import org.leralix.tan.war.legacy.wargoals.SubjugateWarGoal;
+import org.leralix.tan.war.info.WarRole;
+import org.leralix.tan.war.wargoals.ConquerWarGoal;
+import org.leralix.tan.war.wargoals.SubjugateWarGoal;
 
 public class ChooseWarGoal extends BasicGui {
 
-    private final TerritoryData territoryData;
+    private final Territory territoryData;
     private final War war;
     private final WarRole warRole;
     private final BasicGui returnGui;
 
-    public ChooseWarGoal(Player player, TerritoryData territoryData, War war, WarRole warRole, BasicGui returnGui) {
+    public ChooseWarGoal(Player player, Territory territoryData, War war, WarRole warRole, BasicGui returnGui) {
         super(player, Lang.HEADER_SELECT_WARGOAL, 3);
         this.territoryData = territoryData;
         this.war = war;
@@ -44,7 +44,7 @@ public class ChooseWarGoal extends BasicGui {
         gui.setItem(2, 7, getSubjugateButton());
         gui.setItem(2, 8, getLiberateButton());
 
-        gui.setItem(3, 1, GuiUtil.createBackArrow(player, p -> returnGui.open()));
+        gui.setItem(3, 1, GuiUtil.createBackArrow(player, p -> returnGui.open(), langType));
 
         gui.open(player);
     }
@@ -70,7 +70,7 @@ public class ChooseWarGoal extends BasicGui {
                                 return;
                             }
                             TanChatUtils.message(player, Lang.ENTER_NEW_VALUE.get(langType));
-                            PlayerChatListenerStorage.register(player, new SelectNbChunksForConquer(war, warRole, returnGui));
+                            PlayerChatListenerStorage.register(player, langType, new SelectNbChunksForConquer(war, warRole, returnGui));
                         }
                 )
                 .asGuiItem(player, langType);
@@ -78,7 +78,7 @@ public class ChooseWarGoal extends BasicGui {
 
     private @NotNull GuiItem getcaptureLandmarkButton() {
 
-        boolean isTown = territoryData instanceof TownData;
+        boolean isTown = territoryData instanceof Town;
 
         return iconManager.get(IconKey.WAR_GOAL_CAPTURE_LANDMARK_ICON)
                 .setName(Lang.CAPTURE_LANDMARK_WAR_GOAL.get(langType))
@@ -143,8 +143,8 @@ public class ChooseWarGoal extends BasicGui {
     private @NotNull GuiItem getLiberateButton() {
 
         boolean doesEnemyHaveSubjects = warRole == WarRole.MAIN_ATTACKER
-                ? !war.getMainDefender().getVassals().isEmpty()
-                : !war.getMainAttacker().getVassals().isEmpty();
+                ? !war.getMainDefender().getVassalsInternal().isEmpty()
+                : !war.getMainAttacker().getVassalsInternal().isEmpty();
 
         return iconManager.get(IconKey.WAR_GOAL_LIBERATE_ICON)
                 .setName(Lang.LIBERATE_SUBJECT_WAR_GOAL.get(langType))

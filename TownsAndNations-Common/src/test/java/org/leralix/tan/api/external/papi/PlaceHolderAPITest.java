@@ -7,10 +7,9 @@ import org.leralix.tan.BasicTest;
 import org.leralix.tan.api.external.papi.entries.OtherPlayerChatMode;
 import org.leralix.tan.api.external.papi.entries.PapiEntry;
 import org.leralix.tan.api.external.papi.entries.PlayerBalance;
-import org.leralix.tan.dataclass.ITanPlayer;
-import org.leralix.tan.enums.ChatScope;
+import org.leralix.tan.commands.player.ChatScope;
+import org.leralix.tan.data.player.ITanPlayer;
 import org.leralix.tan.storage.LocalChatStorage;
-import org.leralix.tan.storage.stored.PlayerDataStorage;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -24,7 +23,7 @@ class PlaceHolderAPITest extends BasicTest {
     protected void setUp() {
         super.setUp();
 
-        placeHolderAPI = new PlaceHolderAPI();
+        placeHolderAPI = new PlaceHolderAPI(playerDataStorage, townStorage,null, null, null);
     }
 
 
@@ -66,7 +65,7 @@ class PlaceHolderAPITest extends BasicTest {
         Player player = server.addPlayer();
 
 
-        PapiEntry papiEntry = new PlayerBalance();
+        PapiEntry papiEntry = new PlayerBalance(playerDataStorage, townStorage, null, null);
         placeHolderAPI.registerEntry(papiEntry);
 
         assertEquals(PlaceHolderAPI.PLACEHOLDER_NOT_FOUND, placeHolderAPI.onRequest(player, "player_not_balance"));
@@ -78,7 +77,7 @@ class PlaceHolderAPITest extends BasicTest {
         Player player = server.addPlayer();
 
 
-        placeHolderAPI.registerEntry(new PlayerBalance());
+        placeHolderAPI.registerEntry(new PlayerBalance(playerDataStorage, townStorage, null, null));
 
         assertNotEquals(PlaceHolderAPI.PLACEHOLDER_NOT_FOUND, placeHolderAPI.onRequest(player, "player_balance"));
     }
@@ -87,13 +86,15 @@ class PlaceHolderAPITest extends BasicTest {
     void onRequestHitWithParam() {
 
         Player player = server.addPlayer("playerName");
-        ITanPlayer tanPlayer = PlayerDataStorage.getInstance().get(player);
+        ITanPlayer tanPlayer = playerDataStorage.get(player);
 
-        placeHolderAPI.registerEntry(new OtherPlayerChatMode());
+        LocalChatStorage localChatStorage = new LocalChatStorage(playerDataStorage, false);
+
+        placeHolderAPI.registerEntry(new OtherPlayerChatMode(playerDataStorage, townStorage, null, null, localChatStorage));
 
         assertEquals(ChatScope.GLOBAL.getName(tanPlayer.getLang()), placeHolderAPI.onRequest(player, "chat_mode_{playerName}"));
 
-        LocalChatStorage.setPlayerChatScope(player, ChatScope.ALLIANCE);
+        localChatStorage.setPlayerChatScope(player, ChatScope.ALLIANCE);
 
         assertEquals(ChatScope.ALLIANCE.getName(tanPlayer.getLang()), placeHolderAPI.onRequest(player, "chat_mode_{playerName}"));
     }

@@ -7,28 +7,37 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.leralix.lib.data.SoundEnum;
 import org.leralix.tan.TownsAndNations;
-import org.leralix.tan.dataclass.ITanPlayer;
-import org.leralix.tan.dataclass.territory.TerritoryData;
+import org.leralix.tan.data.player.ITanPlayer;
+import org.leralix.tan.data.territory.Territory;
+import org.leralix.tan.data.timezone.TimeZoneEnum;
 import org.leralix.tan.gui.cosmetic.IconManager;
 import org.leralix.tan.gui.cosmetic.type.IconBuilder;
 import org.leralix.tan.lang.FilledLang;
 import org.leralix.tan.lang.Lang;
 import org.leralix.tan.lang.LangType;
 import org.leralix.tan.storage.CurrentAttacksStorage;
-import org.leralix.tan.storage.stored.WarStorage;
-import org.leralix.tan.timezone.TimeZoneEnum;
 import org.leralix.tan.utils.constants.Constants;
+import org.leralix.tan.war.attack.CurrentAttack;
 import org.leralix.tan.war.info.AttackNotYetStarted;
 import org.leralix.tan.war.info.AttackResult;
 import org.leralix.tan.war.info.AttackResultCancelled;
-import org.leralix.tan.war.legacy.CurrentAttack;
-import org.leralix.tan.war.legacy.WarRole;
+import org.leralix.tan.war.info.WarRole;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
 
 public class PlannedAttack {
 
+    /**
+     * The ID of the attack
+     */
     private final String ID;
+
+    /**
+     * Additional information about the attack
+     */
     private AttackResult attackResult;
 
     /**
@@ -66,7 +75,7 @@ public class PlannedAttack {
      * @param endTime               The delta time in minutes between start and end of the attack.
      *                              If endTime is negative, attack will last forever
      */
-    public PlannedAttack(String id, War relatedWar, WarRole roleOfAttacker, int startTime, int endTime) {
+    public PlannedAttack(String id, WarData relatedWar, WarRole roleOfAttacker, int startTime, int endTime) {
         this.ID = id;
 
         this.war = relatedWar;
@@ -97,7 +106,7 @@ public class PlannedAttack {
 
     public War getWar() {
         if(war == null){
-            war = WarStorage.getInstance().get(warID);
+            war = TownsAndNations.getPlugin().getWarStorage().get(warID);
         }
         return war;
     }
@@ -112,7 +121,7 @@ public class PlannedAttack {
 
     public Collection<ITanPlayer> getDefendingPlayers() {
         Collection<ITanPlayer> defenders = new ArrayList<>();
-        for (TerritoryData defendingTerritory : getWar().getDefendingTerritories()) {
+        for (Territory defendingTerritory : getWar().getDefendingTerritories()) {
             defenders.addAll(defendingTerritory.getITanPlayerList());
         }
         return defenders;
@@ -120,16 +129,16 @@ public class PlannedAttack {
 
     public Collection<ITanPlayer> getAttackersPlayers() {
         Collection<ITanPlayer> defenders = new ArrayList<>();
-        for (TerritoryData attackingTerritory : getWar().getAttackingTerritories()) {
+        for (Territory attackingTerritory : getWar().getAttackingTerritories()) {
             defenders.addAll(attackingTerritory.getITanPlayerList());
         }
         return defenders;
     }
 
     public void broadCastMessageWithSound(FilledLang message, SoundEnum soundEnum) {
-        Collection<TerritoryData> territoryData = getWar().getAttackingTerritories();
+        Collection<Territory> territoryData = getWar().getAttackingTerritories();
         territoryData.addAll(getWar().getDefendingTerritories());
-        for (TerritoryData territory : territoryData) {
+        for (Territory territory : territoryData) {
             territory.broadcastMessageWithSound(message, soundEnum);
         }
     }
@@ -204,7 +213,7 @@ public class PlannedAttack {
                 .addDescription(attackResult.getResultLines(langType, timeZone));
     }
 
-    public IconBuilder getIcon(IconManager iconManager, LangType langType, TimeZoneEnum timeZone, TerritoryData territoryConcerned) {
+    public IconBuilder getIcon(IconManager iconManager, LangType langType, TimeZoneEnum timeZone, Territory territoryConcerned) {
         return getIcon(iconManager, langType, timeZone)
                 .addDescription(Lang.ATTACK_ICON_DESC_8.get(getWar().getTerritoryRole(territoryConcerned).getName(langType)));
     }
@@ -231,7 +240,7 @@ public class PlannedAttack {
     }
 
     public WarRole getRole(ITanPlayer player) {
-        for (TerritoryData territoryData : player.getAllTerritoriesPlayerIsIn()) {
+        for (Territory territoryData : player.getAllTerritoriesPlayerIsIn()) {
             WarRole role = getWar().getTerritoryRole(territoryData);
             if (role != WarRole.NEUTRAL) {
                 return role;
@@ -299,5 +308,17 @@ public class PlannedAttack {
 
     public boolean isInstantInAttack(long epochMilli) {
         return epochMilli > startTime && (endTime < 0 || epochMilli < endTime);
+    }
+
+    public long getStartTime() {
+        return startTime;
+    }
+
+    public long getEndTime() {
+        return endTime;
+    }
+
+    public AttackResult getAttackResult() {
+        return attackResult;
     }
 }

@@ -1,20 +1,19 @@
 package org.leralix.tan.events.newsletter.news;
 
-import dev.triumphteam.gui.builder.item.ItemBuilder;
 import dev.triumphteam.gui.guis.GuiItem;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.leralix.lib.data.SoundEnum;
-import org.leralix.tan.dataclass.territory.TerritoryData;
+import org.leralix.tan.data.player.ITanPlayer;
+import org.leralix.tan.data.territory.Territory;
 import org.leralix.tan.events.newsletter.NewsletterType;
+import org.leralix.tan.gui.cosmetic.IconManager;
 import org.leralix.tan.lang.Lang;
 import org.leralix.tan.lang.LangType;
-import org.leralix.tan.utils.deprecated.HeadUtils;
 import org.leralix.tan.utils.gameplay.TerritoryUtil;
 import org.leralix.tan.utils.text.DateUtil;
 import org.leralix.tan.utils.text.TanChatUtils;
-import org.tan.api.interfaces.TanTerritory;
+import org.tan.api.interfaces.territory.TanTerritory;
 
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -48,37 +47,40 @@ public class TerritoryIndependentNews extends Newsletter {
 
     @Override
     public GuiItem createGuiItem(Player player, LangType lang, Consumer<Player> onClick) {
-        TerritoryData leavingTown = TerritoryUtil.getTerritory(formerMasterID);
-        TerritoryData region = TerritoryUtil.getTerritory(independentTerritoryID);
+        Territory leavingTown = TerritoryUtil.getTerritory(formerMasterID);
+        Territory region = TerritoryUtil.getTerritory(independentTerritoryID);
         if (leavingTown == null || region == null)
             return null;
 
-        ItemStack icon = HeadUtils.createCustomItemStack(Material.GOLDEN_HELMET,
-                Lang.TOWN_LEAVE_REGION_NEWSLETTER_TITLE.get(lang),
-                Lang.NEWSLETTER_DATE.get(lang, DateUtil.getRelativeTimeDescription(lang, getDate())),
-                Lang.TOWN_LEAVE_REGION_NEWSLETTER.get(lang, leavingTown.getBaseColoredName(), region.getBaseColoredName()),
-                Lang.NEWSLETTER_RIGHT_CLICK_TO_MARK_AS_READ.get(lang));
-
-        return ItemBuilder.from(icon).asGuiItem(event -> {
-            event.setCancelled(true);
-            if (event.isRightClick()) {
-                markAsRead(player);
-                onClick.accept(player);
-            }
-        });
+        return IconManager.getInstance().get(Material.GOLDEN_HELMET)
+                .setName(Lang.TOWN_LEAVE_REGION_NEWSLETTER_TITLE.get(lang))
+                .setDescription(
+                        Lang.NEWSLETTER_DATE.get(DateUtil.getRelativeTimeDescription(lang, getDate())),
+                        Lang.TOWN_LEAVE_REGION_NEWSLETTER.get(leavingTown.getColoredName(), region.getColoredName())
+                )
+                .setClickToAcceptMessage(Lang.NEWSLETTER_RIGHT_CLICK_TO_MARK_AS_READ)
+                .setAction(action -> {
+                            action.setCancelled(true);
+                            if (action.isRightClick()) {
+                                markAsRead(player);
+                                onClick.accept(player);
+                            }
+                        }
+                )
+                .asGuiItem(player, lang);
     }
 
     @Override
-    public GuiItem createConcernedGuiItem(Player player, LangType lang, Consumer<Player> onClick) {
+    public GuiItem createConcernedGuiItem(Player player, ITanPlayer playerData, LangType lang, Consumer<Player> onClick) {
         return createGuiItem(player, lang, onClick);
     }
 
     @Override
-    public boolean shouldShowToPlayer(Player player) {
-        TerritoryData leavingTown = TerritoryUtil.getTerritory(formerMasterID);
+    public boolean shouldShowToPlayer(ITanPlayer player) {
+        Territory leavingTown = TerritoryUtil.getTerritory(formerMasterID);
         if (leavingTown == null)
             return false;
-        TerritoryData region = TerritoryUtil.getTerritory(independentTerritoryID);
+        Territory region = TerritoryUtil.getTerritory(independentTerritoryID);
         if (region == null)
             return false;
         return leavingTown.isPlayerIn(player) || region.isPlayerIn(player);
@@ -90,19 +92,14 @@ public class TerritoryIndependentNews extends Newsletter {
     }
 
     @Override
-    public void broadcast(Player player) {
-        TerritoryData leavingTown = TerritoryUtil.getTerritory(formerMasterID);
+    public void broadcast(Player player, ITanPlayer tanPlayer) {
+        Territory leavingTown = TerritoryUtil.getTerritory(formerMasterID);
         if (leavingTown == null)
             return;
-        TerritoryData region = TerritoryUtil.getTerritory(independentTerritoryID);
+        Territory region = TerritoryUtil.getTerritory(independentTerritoryID);
         if (region == null)
             return;
 
-        TanChatUtils.message(player, Lang.TOWN_LEAVE_REGION_NEWSLETTER.get(player, leavingTown.getBaseColoredName(), region.getBaseColoredName()), SoundEnum.MINOR_GOOD);
-    }
-
-    @Override
-    public void broadcastConcerned(Player player) {
-        broadcast(player);
+        TanChatUtils.message(player, Lang.TOWN_LEAVE_REGION_NEWSLETTER.get(tanPlayer, leavingTown.getColoredName(), region.getColoredName()), SoundEnum.MINOR_GOOD);
     }
 }

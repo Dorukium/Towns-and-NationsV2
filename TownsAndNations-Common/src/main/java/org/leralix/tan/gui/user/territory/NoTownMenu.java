@@ -2,6 +2,7 @@ package org.leralix.tan.gui.user.territory;
 
 import dev.triumphteam.gui.guis.GuiItem;
 import org.bukkit.entity.Player;
+import org.leralix.tan.TownsAndNations;
 import org.leralix.tan.economy.EconomyUtil;
 import org.leralix.tan.gui.BasicGui;
 import org.leralix.tan.gui.cosmetic.IconKey;
@@ -11,7 +12,6 @@ import org.leralix.tan.gui.user.player.ApplyToTownMenu;
 import org.leralix.tan.lang.Lang;
 import org.leralix.tan.listeners.chat.PlayerChatListenerStorage;
 import org.leralix.tan.listeners.chat.events.CreateTown;
-import org.leralix.tan.storage.stored.TownDataStorage;
 import org.leralix.tan.utils.constants.Constants;
 import org.leralix.tan.utils.deprecated.GuiUtil;
 import org.leralix.tan.utils.text.TanChatUtils;
@@ -30,7 +30,7 @@ public class NoTownMenu extends BasicGui {
 
         gui.setItem(2, 3, getCreateTownButton());
         gui.setItem(2, 7, getBrowseTownsButton());
-        gui.setItem(3, 1, GuiUtil.createBackArrow(player, p -> new MainMenu(player).open()));
+        gui.setItem(3, 1, GuiUtil.createBackArrow(player, p -> new MainMenu(player), langType));
 
         gui.open(player);
     }
@@ -55,7 +55,7 @@ public class NoTownMenu extends BasicGui {
                     }
                     else {
                         TanChatUtils.message(player, Lang.PLAYER_WRITE_TOWN_NAME_IN_CHAT.get(tanPlayer));
-                        PlayerChatListenerStorage.register(player, new CreateTown(townPrice));
+                        PlayerChatListenerStorage.register(player, langType, new CreateTown(townPrice));
                     }
                 })
                 .asGuiItem(player, langType);
@@ -66,7 +66,7 @@ public class NoTownMenu extends BasicGui {
         return IconManager.getInstance().get(IconKey.BROWSE_TOWN_ICON)
                 .setName(Lang.GUI_NO_TOWN_JOIN_A_TOWN.get(tanPlayer))
                 .setDescription(
-                        Lang.GUI_NO_TOWN_JOIN_A_TOWN_DESC1.get(Integer.toString(TownDataStorage.getInstance().getNumberOfTown()))
+                        Lang.GUI_NO_TOWN_JOIN_A_TOWN_DESC1.get(Integer.toString(TownsAndNations.getPlugin().getTownStorage().getNumberOfTown()))
                 )
                 .setAction(event -> new ApplyToTownMenu(player))
                 .asGuiItem(player, langType);

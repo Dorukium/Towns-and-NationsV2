@@ -4,35 +4,36 @@ import dev.triumphteam.gui.guis.GuiItem;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.leralix.tan.dataclass.territory.KingdomData;
-import org.leralix.tan.dataclass.territory.RegionData;
 import org.leralix.lib.data.SoundEnum;
-import org.leralix.tan.dataclass.territory.TerritoryData;
-import org.leralix.tan.dataclass.territory.TownData;
-import org.leralix.tan.dataclass.territory.cosmetic.CustomIcon;
-import org.leralix.tan.enums.BrowseScope;
-import org.leralix.tan.enums.RolePermission;
+import org.leralix.lib.utils.SoundUtil;
+import org.leralix.tan.data.territory.Territory;
+import org.leralix.tan.data.territory.Town;
+import org.leralix.tan.data.territory.cosmetic.CustomIcon;
+import org.leralix.tan.data.territory.rank.RolePermission;
 import org.leralix.tan.gui.BasicGui;
 import org.leralix.tan.gui.cosmetic.IconKey;
 import org.leralix.tan.gui.cosmetic.IconManager;
-import org.leralix.tan.gui.legacy.PlayerGUI;
+import org.leralix.tan.gui.scope.BrowseScope;
 import org.leralix.tan.gui.service.requirements.RankPermissionRequirement;
+import org.leralix.tan.gui.user.MainMenu;
+import org.leralix.tan.gui.user.territory.hierarchy.HierarchyMenu;
 import org.leralix.tan.gui.user.territory.relation.OpenDiplomacyMenu;
 import org.leralix.tan.gui.user.territory.upgrade.UpgradeMenu;
 import org.leralix.tan.lang.FilledLang;
 import org.leralix.tan.lang.Lang;
+import org.leralix.tan.utils.constants.Constants;
+import org.leralix.tan.utils.deprecated.GuiUtil;
 import org.leralix.tan.utils.text.TanChatUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
 
 public abstract class TerritoryMenu extends BasicGui {
 
-    protected final TerritoryData territoryData;
+    protected final Territory territoryData;
 
-    protected TerritoryMenu(Player player, FilledLang name, TerritoryData territoryData) {
+    protected TerritoryMenu(Player player, FilledLang name, Territory territoryData) {
         super(player, name, 4);
         this.territoryData = territoryData;
     }
@@ -76,18 +77,28 @@ public abstract class TerritoryMenu extends BasicGui {
     }
 
     protected GuiItem getLevelButton() {
+
+        boolean canTerritoryBeUpgraded = Constants.getTerritoryMaxLevel(territoryData) > 0;
+
         return IconManager.getInstance().get(IconKey.TERRITORY_LEVEL_ICON)
                 .setName(Lang.GUI_TOWN_LEVEL_ICON.get(tanPlayer.getLang()))
-                .setDescription(territoryData instanceof TownData ? Lang.GUI_TOWN_LEVEL_ICON_DESC1.get() : Lang.GUI_TERRITORY_LEVEL_ICON_DESC1.get())
+                .setDescription( canTerritoryBeUpgraded ? Lang.GUI_TERRITORY_LEVEL_ICON_DESC1.get() : Lang.GUI_TERRITORY_LEVEL_LOCKED.get())
                 .setRequirements(new RankPermissionRequirement(territoryData, tanPlayer, RolePermission.UPGRADE_TOWN))
-                .setAction(event -> new UpgradeMenu(player, territoryData))
+                .setAction(event -> {
+                    if (canTerritoryBeUpgraded) {
+                        new UpgradeMenu(player, territoryData);
+                    } else {
+                        SoundUtil.playSound(player, SoundEnum.NOT_ALLOWED);
+                        event.setCancelled(true);
+                    }
+                })
                 .asGuiItem(player, langType);
     }
 
     protected GuiItem getTownTreasuryButton() {
         return iconManager.get(IconKey.TERRITORY_TREASURY_ICON)
                 .setName(Lang.GUI_TOWN_TREASURY_ICON.get(langType))
-                .setDescription(territoryData instanceof TownData ? Lang.GUI_TOWN_TREASURY_ICON_DESC1.get() : Lang.GUI_TERRITORY_TREASURY_ICON_DESC1.get())
+                .setDescription(territoryData instanceof Town ? Lang.GUI_TOWN_TREASURY_ICON_DESC1.get() : Lang.GUI_TERRITORY_TREASURY_ICON_DESC1.get())
                 .setRequirements(new RankPermissionRequirement(territoryData, tanPlayer, RolePermission.MANAGE_TAXES))
                 .setAction(event -> new TreasuryMenu(player, territoryData))
                 .asGuiItem(player, langType);
@@ -96,7 +107,7 @@ public abstract class TerritoryMenu extends BasicGui {
     protected GuiItem getMemberButton() {
         return iconManager.get(IconKey.TERRITORY_MEMBER_ICON)
                 .setName(Lang.GUI_TOWN_MEMBERS_ICON.get(langType))
-                .setDescription(territoryData instanceof TownData ? Lang.GUI_TOWN_MEMBERS_ICON_DESC1.get() : Lang.GUI_TERRITORY_MEMBERS_ICON_DESC1.get())
+                .setDescription(territoryData instanceof Town ? Lang.GUI_TOWN_MEMBERS_ICON_DESC1.get() : Lang.GUI_TERRITORY_MEMBERS_ICON_DESC1.get())
                 .setAction(event -> new TerritoryMemberMenu(player, territoryData).open())
                 .asGuiItem(player, langType);
     }
@@ -104,7 +115,7 @@ public abstract class TerritoryMenu extends BasicGui {
     protected GuiItem getLandButton() {
         return iconManager.get(IconKey.TERRITORY_LAND_ICON)
                 .setName(Lang.GUI_CLAIM_ICON.get(langType))
-                .setDescription(territoryData instanceof TownData ? Lang.GUI_CLAIM_ICON_DESC1.get() : Lang.GUI_TERRITORY_CLAIM_ICON_DESC1.get())
+                .setDescription(territoryData instanceof Town ? Lang.GUI_CLAIM_ICON_DESC1.get() : Lang.GUI_TERRITORY_CLAIM_ICON_DESC1.get())
                 .setAction(event -> new ChunkSettingsMenu(player, territoryData))
                 .asGuiItem(player, langType);
     }
@@ -112,7 +123,7 @@ public abstract class TerritoryMenu extends BasicGui {
     protected GuiItem getBrowseButton() {
         return iconManager.get(IconKey.TERRITORY_BROWSE_ICON)
                 .setName(Lang.GUI_BROWSE_TERRITORY_ICON.get(langType))
-                .setAction(event -> new BrowseTerritoryMenu(player, territoryData, BrowseScope.ALL, p -> territoryData.openMainMenu(player)))
+                .setAction(event -> new BrowseTerritoryMenu(player, territoryData, BrowseScope.ALL, p -> territoryData.openMainMenu(player, tanPlayer)))
                 .asGuiItem(player, langType);
     }
 
@@ -139,7 +150,7 @@ public abstract class TerritoryMenu extends BasicGui {
                 .setName(Lang.GUI_HIERARCHY_MENU.get(langType))
                 .setDescription(Lang.GUI_HIERARCHY_MENU_DESC1.get())
                 .setRequirements(new RankPermissionRequirement(territoryData, tanPlayer, RolePermission.TOWN_ADMINISTRATOR))
-                .setAction(event -> PlayerGUI.openHierarchyMenu(player, territoryData))
+                .setAction(event -> new HierarchyMenu(player, territoryData))
                 .asGuiItem(player, langType);
     }
 
@@ -152,11 +163,28 @@ public abstract class TerritoryMenu extends BasicGui {
                 .asGuiItem(player, langType);
     }
 
-    protected GuiItem createSettingsButton(FilledLang description, Consumer<Player> openMenu) {
-        return IconManager.getInstance().get(IconKey.TERRITORY_SETTINGS_ICON)
-                .setName(Lang.GUI_TOWN_SETTINGS_ICON.get(tanPlayer.getLang()))
-                .setDescription(description)
-                .setAction(event -> openMenu.accept(player))
+    GuiItem createSettingsButton(FilledLang filledLang, Consumer<Player> action) {
+        return iconManager.get(IconKey.TERRITORY_SETTINGS_ICON)
+                .setName(Lang.GUI_TOWN_SETTINGS_ICON.get(langType))
+                .setDescription(filledLang)
+                .setAction(event -> action.accept(player))
                 .asGuiItem(player, langType);
+    }
+
+    protected void setupCommonLayout(Material glassColor) {
+        gui.setItem(1, 5, getTerritoryInfo());
+        gui.getFiller().fillTop(GuiUtil.getUnnamedItem(glassColor));
+
+        gui.setItem(2, 2, getTownTreasuryButton());
+        gui.setItem(2, 3, getMemberButton());
+        gui.setItem(2, 5, getBrowseButton());
+        gui.setItem(2, 6, getDiplomacyButton());
+        gui.setItem(2, 7, getLevelButton());
+
+        gui.setItem(3, 2, getBuildingButton());
+        gui.setItem(3, 3, getAttackButton());
+        gui.setItem(3, 4, getHierarchyButton());
+
+        gui.setItem(4, 1, GuiUtil.createBackArrow(player, MainMenu::new, langType));
     }
 }

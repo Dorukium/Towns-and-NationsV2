@@ -65,14 +65,14 @@ regionLevelExpression:
   flatMultiplier: 20.0
   base: 200.0
 
-kingdomLevelExpression:
+nationLevelExpression:
   LevelExpression: '(squareMultiplier * level ^ 2 + flatMultiplier * level + base) * 10'
   squareMultiplier: 12.0
   flatMultiplier: 30.0
   base: 400.0
 
 # Town upgrades
-TownMaxLevel: 8
+TownMaxLevel: 8 # "0" will lock the upgrade menu.
 upgrades:
 
   CITY_HALL: #"City hall" tag is already unlocked when creating a town. Use it to store default values of yur towns
@@ -505,7 +505,7 @@ upgrades:
     benefits:
       LANDMARK_BONUS: 50
 
-RegionMaxLevel: 10
+RegionMaxLevel: 0 # "0" will lock the upgrade menu.
 region_upgrades:
 
   CITY_HALL:
@@ -522,8 +522,8 @@ region_upgrades:
       AUTHORIZED_BIOMES: [ 'ALL' ]
       CHUNK_UPKEEP_COST: 0.05
 
-KingdomMaxLevel: 12
-kingdom_upgrades:
+NationMaxLevel: 0 # "0" will lock the upgrade menu.
+nation_upgrades:
 
   CITY_HALL:
     col: -1
@@ -534,7 +534,4 @@ kingdom_upgrades:
     prerequisites:
       TOWN_LEVEL: 0
     benefits:
-      CHUNK_CAP: infinity
-      CHUNK_COST: 1
-      AUTHORIZED_BIOMES: [ 'ALL' ]
-      CHUNK_UPKEEP_COST: 0.1
+      CHUNK_CAP: 0

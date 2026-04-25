@@ -3,15 +3,21 @@ package org.leralix.tan.commands.player;
 import org.bukkit.Chunk;
 import org.bukkit.entity.Player;
 import org.leralix.lib.data.SoundEnum;
-import org.leralix.tan.dataclass.territory.TerritoryData;
+import org.leralix.tan.data.player.ITanPlayer;
+import org.leralix.tan.data.territory.Territory;
 import org.leralix.tan.lang.Lang;
 import org.leralix.tan.lang.LangType;
+import org.leralix.tan.storage.stored.PlayerDataStorage;
 import org.leralix.tan.utils.text.ChatChunkMapRenderer;
 import org.leralix.tan.utils.text.TanChatUtils;
 
 import java.util.Collections;
 
 public class ClaimAreaCommand extends AbstractTerritoryClaimCommand {
+
+    public ClaimAreaCommand(PlayerDataStorage playerDataStorage) {
+        super(playerDataStorage);
+    }
 
     @Override
     public String getName() {
@@ -29,25 +35,25 @@ public class ClaimAreaCommand extends AbstractTerritoryClaimCommand {
 
     @Override
     public String getSyntax() {
-        return "/tan claimarea <town/region/kingdom>";
+        return "/tan claimarea <town/region/nation|kingdom>";
     }
 
     @Override
-    protected void onNoCoordinates(Player player, TerritoryData territoryData, LangType langType, String territoryArg, String[] args) {
+    protected void onNoCoordinates(Player player, ITanPlayer tanPlayer, Territory territoryData, LangType langType, String territoryArg, String[] args) {
     }
 
     @Override
-    protected void onCoordinates(Player player, TerritoryData territoryData, Chunk chunk, LangType langType, String territoryArg, String[] args) {
-        territoryData.claimChunk(player, chunk);
+    protected void onCoordinates(Player player, ITanPlayer tanPlayer, Territory territoryData, Chunk chunk, LangType langType, String territoryArg, String[] args) {
+        territoryData.claimChunk(player, tanPlayer, chunk);
     }
 
     @Override
-    protected void onEnd(Player player, TerritoryData territoryData, LangType langType, String territoryArg, String[] args) {
+    protected void onEnd(Player player, Territory territoryData, LangType langType, String territoryArg, String[] args) {
         openClaimAreaMap(player, territoryArg);
     }
 
-    public static void openClaimAreaMap(Player player, String territoryArg) {
-        LangType langType = LangType.of(player);
+    public void openClaimAreaMap(Player player, String territoryArg) {
+        LangType langType = playerDataStorage.get(player).getLang();
         int radius = 4;
 
         ChatChunkMapRenderer.sendChunkMap(

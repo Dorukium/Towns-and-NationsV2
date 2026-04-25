@@ -1,27 +1,28 @@
 package org.leralix.tan.api.internal.managers;
 
+import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
-import org.leralix.tan.api.internal.wrappers.ClaimedChunkWrapper;
-import org.leralix.tan.api.internal.wrappers.TerritoryDataWrapper;
-import org.leralix.tan.dataclass.chunk.ClaimedChunk2;
-import org.leralix.tan.dataclass.chunk.LandmarkClaimedChunk;
-import org.leralix.tan.dataclass.territory.TerritoryData;
-import org.leralix.tan.storage.stored.NewClaimedChunkStorage;
+import org.leralix.tan.TownsAndNations;
+import org.leralix.tan.data.chunk.IClaimedChunk;
+import org.leralix.tan.data.chunk.LandmarkClaimedChunk;
+import org.leralix.tan.data.chunk.TerritoryChunkData;
+import org.leralix.tan.data.chunk.WildernessChunkData;
+import org.leralix.tan.storage.stored.ClaimStorage;
 import org.tan.api.getters.TanClaimManager;
-import org.tan.api.interfaces.TanClaimedChunk;
-import org.tan.api.interfaces.TanTerritory;
+import org.tan.api.interfaces.chunk.TanClaimedChunk;
+import org.tan.api.interfaces.territory.TanTerritory;
 
 import java.util.Optional;
 
 public class ClaimManager implements TanClaimManager {
 
-    private final NewClaimedChunkStorage newClaimedChunkStorage;
+    private final ClaimStorage newClaimedChunkStorage;
 
     private static ClaimManager instance;
 
     private ClaimManager() {
-        newClaimedChunkStorage = NewClaimedChunkStorage.getInstance();
+        newClaimedChunkStorage = TownsAndNations.getPlugin().getClaimStorage();
     }
 
     public static ClaimManager getInstance() {
@@ -33,25 +34,28 @@ public class ClaimManager implements TanClaimManager {
 
     @Override
     public boolean isBlockClaimed(Block block) {
-        ClaimedChunk2 claimedChunk = newClaimedChunkStorage.get(block.getChunk());
+        IClaimedChunk claimedChunk = newClaimedChunkStorage.get(block.getChunk());
         return claimedChunk.isClaimed();
     }
 
     @Override
     public TanClaimedChunk getClaimedChunk(Location location) {
-        return ClaimedChunkWrapper.of(NewClaimedChunkStorage.getInstance().get(location.getChunk()));
+        return newClaimedChunkStorage.get(location.getChunk());
     }
 
     @Override
     public Optional<TanTerritory> getTerritoryOfBlock(Block block) {
-        ClaimedChunk2 claimedChunk = newClaimedChunkStorage.get(block.getChunk());
-        if(!claimedChunk.isClaimed()){
-            return Optional.empty();
-        }
-        if(claimedChunk instanceof LandmarkClaimedChunk landmarkClaimedChunk){
-            TerritoryData territoryData = landmarkClaimedChunk.getOwner();
-            return Optional.ofNullable(TerritoryDataWrapper.of(territoryData));
-        }
-        return Optional.ofNullable(TerritoryDataWrapper.of(claimedChunk.getOwner()));
+        return getTerritoryOfChunk(block.getChunk());
+    }
+
+    public Optional<TanTerritory> getTerritoryOfChunk(Chunk chunk) {
+        IClaimedChunk claimedChunk = newClaimedChunkStorage.get(chunk);
+
+        return switch (claimedChunk){
+            case WildernessChunkData ignored -> Optional.empty();
+            case LandmarkClaimedChunk landmarkClaimedChunk -> Optional.ofNullable(landmarkClaimedChunk.getLandMark().getOwner());
+            case TerritoryChunkData territoryChunk -> Optional.ofNullable(territoryChunk.getOwner());
+            default -> throw new IllegalStateException("Unexpected chunk type : " + claimedChunk);
+        };
     }
 }

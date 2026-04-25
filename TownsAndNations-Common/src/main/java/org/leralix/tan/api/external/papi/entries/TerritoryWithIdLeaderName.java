@@ -2,22 +2,35 @@ package org.leralix.tan.api.external.papi.entries;
 
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
-import org.leralix.tan.dataclass.ITanPlayer;
-import org.leralix.tan.dataclass.territory.TerritoryData;
+import org.leralix.tan.data.player.ITanPlayer;
+import org.leralix.tan.data.territory.Territory;
 import org.leralix.tan.lang.Lang;
+import org.leralix.tan.storage.stored.NationStorage;
 import org.leralix.tan.storage.stored.PlayerDataStorage;
+import org.leralix.tan.storage.stored.RegionStorage;
+import org.leralix.tan.storage.stored.TownStorage;
 
 public class TerritoryWithIdLeaderName extends PapiEntry {
 
 
-    protected TerritoryWithIdLeaderName() {
-        super("territory_with_id_{}_leader_name");
+    public TerritoryWithIdLeaderName(
+            PlayerDataStorage playerDataStorage,
+            TownStorage townStorage,
+            RegionStorage regionDataStorage,
+            NationStorage nationDataStorage
+    ) {
+        super("territory_with_id_{}_leader_name",
+                playerDataStorage,
+                townStorage,
+                regionDataStorage,
+                nationDataStorage
+        );
     }
 
     @Override
     public String getData(OfflinePlayer player, @NotNull String params) {
 
-        ITanPlayer tanPlayer = PlayerDataStorage.getInstance().get(player.getUniqueId());
+        ITanPlayer tanPlayer = playerDataStorage.get(player.getUniqueId());
 
         if (tanPlayer == null) {
             return PLAYER_NOT_FOUND;
@@ -27,7 +40,7 @@ public class TerritoryWithIdLeaderName extends PapiEntry {
         if(values.length == 0) return Lang.INVALID_VALUE.get(tanPlayer);
         String name = values[0];
         if(name == null) return Lang.INVALID_ID.get(tanPlayer);
-        TerritoryData territoryData = getTerritoryByName(name);
+        Territory territoryData = getTerritoryByName(name);
         if (territoryData == null) return Lang.INVALID_TERRITORY.get(tanPlayer);
 
         return territoryData.getLeaderData().getOfflinePlayer().getName();

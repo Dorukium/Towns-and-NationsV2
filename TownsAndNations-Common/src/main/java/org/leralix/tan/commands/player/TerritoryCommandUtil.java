@@ -2,8 +2,8 @@ package org.leralix.tan.commands.player;
 
 import org.bukkit.Chunk;
 import org.bukkit.entity.Player;
-import org.leralix.tan.dataclass.ITanPlayer;
-import org.leralix.tan.dataclass.territory.TerritoryData;
+import org.leralix.tan.data.player.ITanPlayer;
+import org.leralix.tan.data.territory.Territory;
 import org.leralix.tan.lang.Lang;
 import org.leralix.tan.lang.LangType;
 import org.leralix.tan.utils.text.TanChatUtils;
@@ -25,37 +25,43 @@ public final class TerritoryCommandUtil {
         if (tanPlayer.hasRegion()) {
             suggestions.add("region");
         }
-        if (tanPlayer.hasKingdom()) {
-            suggestions.add("kingdom");
+        if (tanPlayer.hasNation()) {
+            suggestions.add("nation");
         }
         return suggestions;
     }
 
-    public static TerritoryData resolveTerritory(Player player, ITanPlayer tanPlayer, String territoryArg, String syntax) {
-        if (territoryArg.equals("town")) {
-            if (!tanPlayer.hasTown()) {
-                TanChatUtils.message(player, Lang.PLAYER_NO_TOWN.get(player));
-                return null;
-            }
-            return tanPlayer.getTown();
-        }
-        if (territoryArg.equals("region")) {
-            if (!tanPlayer.hasRegion()) {
-                TanChatUtils.message(player, Lang.PLAYER_NO_REGION.get(player));
-                return null;
-            }
-            return tanPlayer.getRegion();
-        }
-        if (territoryArg.equals("kingdom")) {
-            if (!tanPlayer.hasKingdom()) {
-                TanChatUtils.message(player, Lang.PLAYER_NO_KINGDOM.get(player));
-                return null;
-            }
-            return tanPlayer.getKingdom();
-        }
+    public static Territory resolveTerritory(Player player, ITanPlayer tanPlayer, String territoryArg, String syntax) {
 
-        TanChatUtils.message(player, Lang.CORRECT_SYNTAX_INFO.get(syntax).getDefault());
-        return null;
+        LangType langType = tanPlayer.getLang();
+
+        switch (territoryArg) {
+            case "town" -> {
+                if (!tanPlayer.hasTown()) {
+                    TanChatUtils.message(player, Lang.PLAYER_NO_TOWN.get(langType));
+                    return null;
+                }
+                return tanPlayer.getTown();
+            }
+            case "region" -> {
+                if (!tanPlayer.hasRegion()) {
+                    TanChatUtils.message(player, Lang.PLAYER_NO_REGION.get(langType));
+                    return null;
+                }
+                return tanPlayer.getRegion();
+            }
+            case "nation" -> {
+                if (!tanPlayer.hasNation()) {
+                    TanChatUtils.message(player, Lang.PLAYER_NO_NATION.get(langType));
+                    return null;
+                }
+                return tanPlayer.getNation();
+            }
+            default -> {
+                TanChatUtils.message(player, Lang.CORRECT_SYNTAX_INFO.get(syntax).getDefault());
+                return null;
+            }
+        }
     }
 
     public static Chunk parseChunkFromArgs(Player player, String[] args, int xIndex, int zIndex, LangType langType, String syntax) {

@@ -4,7 +4,7 @@ import dev.triumphteam.gui.guis.GuiItem;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
-import org.leralix.tan.dataclass.territory.TownData;
+import org.leralix.tan.data.territory.Town;
 import org.leralix.tan.gui.IteratorGUI;
 import org.leralix.tan.gui.common.ConfirmMenu;
 import org.leralix.tan.lang.Lang;
@@ -16,11 +16,11 @@ import java.util.UUID;
 
 public class SelectNewOwnerForTownMenu extends IteratorGUI {
 
-    private final TownData townData;
+    private final Town townData;
     private final Runnable backMenu;
 
 
-    public SelectNewOwnerForTownMenu(Player player, TownData townData, Runnable backMenu) {
+    public SelectNewOwnerForTownMenu(Player player, Town townData, Runnable backMenu) {
         super(player, Lang.HEADER_CHANGE_OWNERSHIP, 3);
         this.townData = townData;
         this.backMenu = backMenu;
@@ -35,12 +35,12 @@ public class SelectNewOwnerForTownMenu extends IteratorGUI {
 
     private List<GuiItem> getCandidates() {
         List<GuiItem> guiItems = new ArrayList<>();
-        for (String playerUUID : townData.getPlayerIDList()) {
+        for (UUID playerUUID : townData.getPlayerIDList()) {
             if (townData.isLeader(playerUUID)) {
                 continue;
             }
 
-            OfflinePlayer townPlayer = Bukkit.getServer().getOfflinePlayer(UUID.fromString(playerUUID));
+            OfflinePlayer townPlayer = Bukkit.getServer().getOfflinePlayer(playerUUID);
 
             guiItems.add(
                     iconManager.get(townPlayer)
@@ -56,7 +56,7 @@ public class SelectNewOwnerForTownMenu extends IteratorGUI {
                                         player,
                                         Lang.GUI_CONFIRM_CHANGE_TOWN_LEADER.get(townPlayer.getName()),
                                         () -> {
-                                            townData.setLeaderID(townPlayer.getUniqueId().toString());
+                                            townData.setLeaderID(townPlayer.getUniqueId());
                                             TanChatUtils.message(player, Lang.GUI_TOWN_SETTINGS_TRANSFER_OWNERSHIP_TO_SPECIFIC_PLAYER_SUCCESS.get(tanPlayer, townPlayer.getName()));
 
                                             backMenu.run();

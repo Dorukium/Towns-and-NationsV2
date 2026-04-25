@@ -1,10 +1,10 @@
 package org.leralix.tan.api.internal.managers;
 
 import org.bukkit.Location;
-import org.leralix.tan.api.internal.wrappers.LandmarkDataWrapper;
+import org.leralix.tan.TownsAndNations;
 import org.leralix.tan.storage.stored.LandmarkStorage;
 import org.tan.api.getters.TanLandmarkManager;
-import org.tan.api.interfaces.TanLandmark;
+import org.tan.api.interfaces.buildings.TanLandmark;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -16,7 +16,7 @@ public class LandmarkManager implements TanLandmarkManager {
     private static LandmarkManager instance;
 
     private LandmarkManager() {
-        landmarkStorage = LandmarkStorage.getInstance();
+        landmarkStorage = TownsAndNations.getPlugin().getLandmarkStorage();
     }
 
     public static LandmarkManager getInstance() {
@@ -30,14 +30,13 @@ public class LandmarkManager implements TanLandmarkManager {
     @Override
     public Collection<TanLandmark> getLandmarks() {
         return landmarkStorage.getAll().values().stream()
-                .map(LandmarkDataWrapper::of)
                 .map(t -> (TanLandmark) t)
                 .toList();
     }
 
     @Override
     public Optional<TanLandmark> getLandmark(String s) {
-        return Optional.ofNullable(LandmarkDataWrapper.of(landmarkStorage.get(s)));
+        return Optional.ofNullable(landmarkStorage.get(s));
     }
 
     @Override

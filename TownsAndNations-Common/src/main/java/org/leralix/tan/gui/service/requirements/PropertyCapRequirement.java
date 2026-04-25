@@ -1,15 +1,15 @@
 package org.leralix.tan.gui.service.requirements;
 
-import org.leralix.tan.dataclass.territory.TownData;
+import org.leralix.tan.data.territory.Town;
 import org.leralix.tan.lang.Lang;
 import org.leralix.tan.lang.LangType;
 
 public class PropertyCapRequirement extends IndividualRequirement{
 
     private final int maxAmount;
-    private final TownData territoryData;
+    private final Town territoryData;
 
-    public PropertyCapRequirement(TownData territoryData, int maxAmount) {
+    public PropertyCapRequirement(Town territoryData, int maxAmount) {
         this.territoryData = territoryData;
         this.maxAmount = maxAmount;
     }
@@ -28,6 +28,6 @@ public class PropertyCapRequirement extends IndividualRequirement{
 
     @Override
     public boolean isInvalid() {
-        return territoryData.getProperties().size() > maxAmount;
+        return territoryData.getProperties().size() >= maxAmount;
     }
 }

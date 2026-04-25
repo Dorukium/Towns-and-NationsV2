@@ -7,9 +7,9 @@ import org.jetbrains.annotations.NotNull;
 import org.leralix.lib.data.SoundEnum;
 import org.leralix.lib.position.Vector2D;
 import org.leralix.lib.utils.SoundUtil;
-import org.leralix.tan.dataclass.territory.RegionData;
-import org.leralix.tan.dataclass.territory.TownData;
-import org.leralix.tan.enums.RolePermission;
+import org.leralix.tan.TownsAndNations;
+import org.leralix.tan.data.territory.Town;
+import org.leralix.tan.data.territory.rank.RolePermission;
 import org.leralix.tan.events.EventManager;
 import org.leralix.tan.events.events.TownDeletedInternalEvent;
 import org.leralix.tan.gui.common.ConfirmMenu;
@@ -22,7 +22,6 @@ import org.leralix.tan.listeners.chat.PlayerChatListenerStorage;
 import org.leralix.tan.listeners.chat.events.ChangeTownTag;
 import org.leralix.tan.listeners.interact.RightClickListener;
 import org.leralix.tan.listeners.interact.events.ChangeCapital;
-import org.leralix.tan.storage.stored.WarStorage;
 import org.leralix.tan.utils.constants.Constants;
 import org.leralix.tan.utils.deprecated.GuiUtil;
 import org.leralix.tan.utils.file.FileUtil;
@@ -36,9 +35,9 @@ import static org.leralix.lib.data.SoundEnum.*;
 
 public class TownSettingsMenu extends SettingsMenus {
 
-    private final TownData townData;
+    private final Town townData;
 
-    public TownSettingsMenu(Player player, TownData townData) {
+    public TownSettingsMenu(Player player, Town townData) {
         super(player, Lang.HEADER_SETTINGS, townData, 4);
         this.townData = townData;
         open();
@@ -53,21 +52,22 @@ public class TownSettingsMenu extends SettingsMenus {
         gui.setItem(2, 2, getRenameButton());
         gui.setItem(2, 3, getChangeDescriptionButton());
         gui.setItem(2, 4, getChangeColorButton());
-        gui.setItem(2, 5, setBannerButton());
 
         gui.setItem(3, 2, getChangeApplicationButton());
         gui.setItem(3, 3, getChangeCapitalChunkButton());
+        gui.setItem(3, 4, getAuthorizedTeleportationButton());
 
         if (Constants.enableTownTag()) {
-            gui.setItem(3, 4, getChangeTagButton());
+            gui.setItem(3, 6, getChangeTagButton());
         }
+        gui.setItem(3, 7, setBannerButton());
 
 
         gui.setItem(2, 6, getChangeOwnershipButton());
         gui.setItem(2, 7, getQuitButton());
         gui.setItem(2, 8, getDeleteButton());
 
-        gui.setItem(4, 1, GuiUtil.createBackArrow(player, p -> new TownMenu(player, townData)));
+        gui.setItem(4, 1, GuiUtil.createBackArrow(player, p -> new TownMenu(player, tanPlayer, townData), langType));
 
         gui.open(player);
     }
@@ -100,7 +100,7 @@ public class TownSettingsMenu extends SettingsMenus {
                         return;
                     }
 
-                    RightClickListener.register(player, new ChangeCapital(townData, p -> open()));
+                    RightClickListener.register(player, langType, new ChangeCapital(townData, p -> open()));
                 })
                 .asGuiItem(player, langType);
 
@@ -114,7 +114,7 @@ public class TownSettingsMenu extends SettingsMenus {
                 .setRequirements(new RankPermissionRequirement(territoryData, tanPlayer, RolePermission.TOWN_ADMINISTRATOR))
                 .setAction(action -> {
                     TanChatUtils.message(player, Lang.ENTER_NEW_VALUE.get(langType));
-                    PlayerChatListenerStorage.register(player, new ChangeTownTag(townData, p -> open()));
+                    PlayerChatListenerStorage.register(player, langType, new ChangeTownTag(townData, p -> open()));
                 })
                 .asGuiItem(player, langType);
     }
@@ -139,12 +139,11 @@ public class TownSettingsMenu extends SettingsMenus {
                         return;
                     }
 
-                    if (townData.haveOverlord()) {
-                        RegionData regionData = townData.getRegion();
-                        if (regionData.isLeader(tanPlayer)) {
-                            TanChatUtils.message(player, Lang.CHAT_CANT_LEAVE_TOWN_IF_REGION_LEADER.get(tanPlayer), NOT_ALLOWED);
-                        }
+                    var optOverlord = territoryData.getOverlordInternal();
+                    if (optOverlord.isPresent() && optOverlord.get().isLeader(tanPlayer)) {
+                        TanChatUtils.message(player, Lang.CHAT_CANT_LEAVE_TOWN_IF_REGION_LEADER.get(tanPlayer), NOT_ALLOWED);
                     }
+
 
                     new ConfirmMenu(
                             player,
@@ -175,11 +174,11 @@ public class TownSettingsMenu extends SettingsMenus {
                 .setAction(event -> {
                     event.setCancelled(true);
                     if (townData.isCapital()) {
-                        TanChatUtils.message(player, Lang.CANNOT_DELETE_TERRITORY_IF_CAPITAL.get(tanPlayer, townData.getOverlord().get().getBaseColoredName()));
+                        TanChatUtils.message(player, Lang.CANNOT_DELETE_TERRITORY_IF_CAPITAL.get(tanPlayer, townData.getOverlordInternal().get().getColoredName()));
                         return;
                     }
 
-                    if (!WarStorage.getInstance().getWarsOfTerritory(territoryData).isEmpty()) {
+                    if (!TownsAndNations.getPlugin().getWarStorage().getWarsOfTerritory(territoryData).isEmpty()) {
                         TanChatUtils.message(player, Lang.CANNOT_DELETE_TERRITORY_IF_AT_WAR.get(langType), SoundEnum.NOT_ALLOWED);
                         return;
                     }

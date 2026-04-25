@@ -1,10 +1,11 @@
 plugins {
     id 'java'
-    id "com.gradleup.shadow" version "8.3.6"
+    id "com.gradleup.shadow" version "8.3.7"
 }
 
 jar {
     archiveBaseName = 'TownsAndNations'
+    enabled = false
 }
 
 shadowJar {
@@ -13,10 +14,15 @@ shadowJar {
 
 tasks.shadowJar {
     archiveClassifier.set('')
+    relocate 'org.bstats', 'org.leralix.tan.bstat'
+}
+
+tasks.build {
+    dependsOn tasks.shadowJar
 }
 
 group = 'org.tan'
-version = '0.16.8'
+version = '0.18.0'
 
 compileJava.options.encoding = 'UTF-8'
 
@@ -70,7 +76,7 @@ repositories {
 
 dependencies {
     //Compile only
-    compileOnly 'io.github.leralix:sphere-lib:0.6.0'
+    compileOnly 'io.github.leralix:sphere-lib:0.6.1'
     compileOnly 'io.papermc.paper:paper-api:1.20-R0.1-SNAPSHOT'
     compileOnly 'com.mojang:authlib:4.0.43'
     compileOnly 'net.luckperms:api:5.4'
@@ -88,13 +94,16 @@ dependencies {
     //Database dependencies
     implementation 'com.mysql:mysql-connector-j:8.4.0'
     implementation 'org.xerial:sqlite-jdbc:3.43.2.0'
+    implementation 'redis.clients:jedis:7.2.0'
 
     //Tests
-    testImplementation 'io.github.leralix:sphere-lib:0.6.0'
+    testImplementation 'io.github.leralix:sphere-lib:0.6.1'
     testImplementation 'com.github.MockBukkit:MockBukkit:v4.72.9'
     testImplementation 'io.papermc.paper:paper-api:1.20-R0.1-SNAPSHOT'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.0'
     testImplementation 'org.mockito:mockito-core:5.7.0'
     testImplementation 'org.mockito:mockito-junit-jupiter:5.7.0'
     testImplementation 'me.clip:placeholderapi:2.11.5'
@@ -114,6 +123,8 @@ configurations.all {
 
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
+    systemProperty 'user.language', 'en'
+    systemProperty 'user.country', 'US'
 }
 
 def targetJavaVersion = 21

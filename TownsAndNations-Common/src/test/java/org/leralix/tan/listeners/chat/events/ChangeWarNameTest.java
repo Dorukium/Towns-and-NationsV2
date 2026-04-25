@@ -1,53 +1,32 @@
 package org.leralix.tan.listeners.chat.events;
 
 import org.bukkit.entity.Player;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.leralix.lib.SphereLib;
-import org.leralix.tan.TownsAndNations;
-import org.leralix.tan.dataclass.territory.TownData;
-import org.leralix.tan.storage.stored.TownDataStorage;
-import org.leralix.tan.war.War;
-import org.mockbukkit.mockbukkit.MockBukkit;
-import org.mockbukkit.mockbukkit.ServerMock;
-
-import java.util.Collections;
+import org.leralix.tan.BasicTest;
+import org.leralix.tan.data.player.ITanPlayer;
+import org.leralix.tan.data.territory.Town;
+import org.leralix.tan.war.WarData;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class ChangeWarNameTest {
+class ChangeWarNameTest extends BasicTest {
 
-    private ServerMock server;
-
-    @BeforeEach
-    void setUp() {
-        server = MockBukkit.mock();
-
-        MockBukkit.load(SphereLib.class);
-        MockBukkit.load(TownsAndNations.class);
-    }
-
-    @AfterEach
-    public void tearDown()
-    {
-        MockBukkit.unmock();
-    }
 
     @Test
     void nominalCase() {
 
         Player player = server.addPlayer();
+        ITanPlayer tanPlayer = playerDataStorage.get(player);
 
-        TownData town1 = TownDataStorage.getInstance().newTown("town 1");
-        TownData town2 = TownDataStorage.getInstance().newTown("town 2");
+        Town town1 = townStorage.newTown("town 1");
+        Town town2 = townStorage.newTown("town 2");
 
-        War war = new War("W1", town1, town2, Collections.emptyList());
+        WarData war = new WarData("W1", town1, town2);
 
         ChangeWarName changeWarName = new ChangeWarName(war, null);
 
         String newName = "new war name";
-        changeWarName.execute(player, newName);
+        changeWarName.execute(player, tanPlayer, newName);
 
         assertEquals(newName, war.getName());
 

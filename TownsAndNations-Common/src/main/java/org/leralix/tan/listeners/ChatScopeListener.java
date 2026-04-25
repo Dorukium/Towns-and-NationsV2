@@ -4,10 +4,18 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.leralix.tan.storage.LocalChatStorage;
 import org.leralix.tan.listeners.chat.PlayerChatListenerStorage;
+import org.leralix.tan.storage.LocalChatStorage;
 
 public class ChatScopeListener implements Listener {
+
+    private final LocalChatStorage localChatStorage;
+
+    public ChatScopeListener(
+            LocalChatStorage localChatStorage
+    ) {
+        this.localChatStorage = localChatStorage;
+    }
 
     @EventHandler
     public void onPlayerChat(AsyncPlayerChatEvent event){
@@ -19,11 +27,11 @@ public class ChatScopeListener implements Listener {
         if(PlayerChatListenerStorage.contains(player))
             return;
 
-        if(!LocalChatStorage.isPlayerInChatScope(playerUUID))
+        if(!localChatStorage.isPlayerInChatScope(playerUUID))
             return;
 
 
-        LocalChatStorage.broadcastInScope(player, event.getMessage());
+        localChatStorage.broadcastInScope(player, event.getMessage());
         event.setCancelled(true);
     }
 }

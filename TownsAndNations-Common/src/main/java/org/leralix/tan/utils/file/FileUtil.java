@@ -1,10 +1,7 @@
 package org.leralix.tan.utils.file;
 
-import org.leralix.lib.utils.config.ConfigTag;
-import org.leralix.lib.utils.config.ConfigUtil;
 import org.leralix.tan.TownsAndNations;
 import org.leralix.tan.lang.FilledLang;
-import org.leralix.tan.lang.Lang;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -18,13 +15,19 @@ import java.time.LocalDate;
 public class FileUtil {
     private static final String ERROR_MESSAGE = "Could not create history file!";
 
+    private static boolean enable = false;
+
     private FileUtil() {
         throw new IllegalStateException("Utility class");
     }
 
+    public static void setEnable(boolean value){
+        enable = value;
+    }
+
     public static void addLineToHistory(final FilledLang lineToAdd) {
 
-        if (!ConfigUtil.getCustomConfig(ConfigTag.MAIN).getBoolean("archiveHistory", true)) {
+        if (!enable) {
             return;
         }
 

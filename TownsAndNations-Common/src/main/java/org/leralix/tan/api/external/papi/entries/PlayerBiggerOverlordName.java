@@ -2,31 +2,44 @@ package org.leralix.tan.api.external.papi.entries;
 
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
-import org.leralix.tan.dataclass.ITanPlayer;
+import org.leralix.tan.data.player.ITanPlayer;
 import org.leralix.tan.lang.Lang;
+import org.leralix.tan.storage.stored.NationStorage;
 import org.leralix.tan.storage.stored.PlayerDataStorage;
+import org.leralix.tan.storage.stored.RegionStorage;
+import org.leralix.tan.storage.stored.TownStorage;
 
 public class PlayerBiggerOverlordName extends PapiEntry{
 
-    public PlayerBiggerOverlordName() {
-        super("player_bigger_overlord_name");
+    public PlayerBiggerOverlordName(
+            PlayerDataStorage playerDataStorage,
+            TownStorage townStorage,
+            RegionStorage regionDataStorage,
+            NationStorage nationDataStorage
+    ) {
+        super("player_bigger_overlord_name",
+                playerDataStorage,
+                townStorage,
+                regionDataStorage,
+                nationDataStorage
+        );
     }
 
     @Override
     public String getData(OfflinePlayer player, @NotNull String params) {
 
-        ITanPlayer tanPlayer = PlayerDataStorage.getInstance().get(player.getUniqueId());
+        ITanPlayer tanPlayer = playerDataStorage.get(player.getUniqueId());
 
         if (tanPlayer == null) {
             return PLAYER_NOT_FOUND;
         }
 
-        if(tanPlayer.hasKingdom())
-            return tanPlayer.getKingdom().getName();
+        if(tanPlayer.hasNation())
+            return tanPlayer.getNation().getName();
         if(tanPlayer.hasRegion())
             return tanPlayer.getRegion().getName();
         if(tanPlayer.hasTown())
             return tanPlayer.getTown().getName();
-        return Lang.NO_KINGDOM.get(tanPlayer);
+        return Lang.NO_NATION.get(tanPlayer);
     }
 }

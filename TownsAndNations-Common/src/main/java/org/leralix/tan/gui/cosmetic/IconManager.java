@@ -12,6 +12,7 @@ import org.leralix.tan.TownsAndNations;
 import org.leralix.tan.gui.cosmetic.type.*;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -27,7 +28,7 @@ public class IconManager {
 
         Plugin plugin = TownsAndNations.getPlugin();
 
-        ConfigUtil.saveAndUpdateResource(plugin, "menu/icons.yml");
+        ConfigUtil.saveAndUpdateResource(plugin, "menu/icons.yml", Collections.emptyList());
         YamlConfiguration config = YamlConfiguration.loadConfiguration(new File(plugin.getDataFolder(), "menu/icons.yml"));
 
 
@@ -89,9 +90,6 @@ public class IconManager {
             else {
                 return new ItemIconBuilder(iconMaterial);
             }
-
-
-
         }
         return switch (value) {
             case "PLAYER_HEAD" -> new PlayerHeadIconType();

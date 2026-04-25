@@ -3,10 +3,10 @@ package org.leralix.tan.gui.user.territory;
 import dev.triumphteam.gui.guis.GuiItem;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.leralix.tan.dataclass.territory.TerritoryData;
-import org.leralix.tan.dataclass.territory.TownData;
-import org.leralix.tan.dataclass.territory.economy.Budget;
-import org.leralix.tan.enums.RolePermission;
+import org.leralix.tan.data.territory.Territory;
+import org.leralix.tan.data.territory.Town;
+import org.leralix.tan.data.territory.economy.Budget;
+import org.leralix.tan.data.territory.rank.RolePermission;
 import org.leralix.tan.gui.BasicGui;
 import org.leralix.tan.gui.cosmetic.IconKey;
 import org.leralix.tan.gui.user.territory.history.TerritoryTransactionHistory;
@@ -25,10 +25,10 @@ import java.util.List;
 
 public class TreasuryMenu extends BasicGui {
 
-    protected final TerritoryData territoryData;
+    protected final Territory territoryData;
     protected final Budget budget;
 
-    public TreasuryMenu(Player player, TerritoryData territoryData){
+    public TreasuryMenu(Player player, Territory territoryData){
         super(player, Lang.HEADER_ECONOMY, 5);
         this.territoryData = territoryData;
         this.budget = territoryData.getBudget();
@@ -37,7 +37,7 @@ public class TreasuryMenu extends BasicGui {
 
     @Override
     public void open() {
-        budget.createGui(gui, player, langType);
+        budget.createGui(gui, player, tanPlayer, langType);
 
         gui.setItem(1, 5, getBudgetIcon(langType));
         gui.getFiller().fillTop(GuiUtil.getUnnamedItem(Material.YELLOW_STAINED_GLASS_PANE));
@@ -47,7 +47,7 @@ public class TreasuryMenu extends BasicGui {
         gui.setItem(3,2, getDonationButton());
         gui.setItem(3,4, getRetrieveButton());
 
-        gui.setItem(5,1, GuiUtil.createBackArrow(player, p -> territoryData.openMainMenu(player)));
+        gui.setItem(5,1, GuiUtil.createBackArrow(player, p -> territoryData.openMainMenu(player, tanPlayer), langType));
 
         gui.open(player);
     }
@@ -79,16 +79,16 @@ public class TreasuryMenu extends BasicGui {
                 .setAction(action -> {
                     if(action.isRightClick()){
                         TanChatUtils.message(player, Lang.WRITE_IN_CHAT_AMOUNT_OF_MONEY_FOR_DONATION.get(tanPlayer));
-                        PlayerChatListenerStorage.register(player, new DonateToTerritory(territoryData));
+                        PlayerChatListenerStorage.register(player, langType, new DonateToTerritory(territoryData));
                     }
                     else {
                         new TerritoryTransactionHistory(player, territoryData, TransactionType.DONATION, p -> new TreasuryMenu(player, territoryData));
                     }
                 })
-                .setDescription(territoryData instanceof TownData ? Lang.GUI_TOWN_TREASURY_DONATION_DESC1.get() : Lang.GUI_TERRITORY_TREASURY_DONATION_DESC1.get())
+                .setDescription(territoryData instanceof Town ? Lang.GUI_TOWN_TREASURY_DONATION_DESC1.get() : Lang.GUI_TERRITORY_TREASURY_DONATION_DESC1.get())
                 .setClickToAcceptMessage(
                         Lang.GUI_GENERIC_CLICK_TO_OPEN_HISTORY,
-                        territoryData instanceof TownData ? Lang.GUI_TOWN_TREASURY_RIGHT_CLICK_TO_DONATE : Lang.GUI_TERRITORY_TREASURY_RIGHT_CLICK_TO_DONATE
+                        territoryData instanceof Town ? Lang.GUI_TOWN_TREASURY_RIGHT_CLICK_TO_DONATE : Lang.GUI_TERRITORY_TREASURY_RIGHT_CLICK_TO_DONATE
                 )
                 .asGuiItem(player, langType);
     }
@@ -104,7 +104,7 @@ public class TreasuryMenu extends BasicGui {
                         return;
                     }
                     TanChatUtils.message(player, Lang.PLAYER_WRITE_QUANTITY_IN_CHAT.get(tanPlayer));
-                    PlayerChatListenerStorage.register(player,new RetrieveMoney(territoryData));
+                    PlayerChatListenerStorage.register(player, langType, new RetrieveMoney(territoryData));
                 })
 
                 .asGuiItem(player, langType);

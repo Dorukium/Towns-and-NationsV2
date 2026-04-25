@@ -2,9 +2,9 @@ package org.leralix.tan.events.newsletter.dao;
 
 import org.bukkit.entity.Player;
 import org.leralix.tan.TownsAndNations;
+import org.leralix.tan.data.timezone.TimeZoneManager;
 import org.leralix.tan.events.newsletter.NewsletterType;
 import org.leralix.tan.events.newsletter.news.Newsletter;
-import org.leralix.tan.timezone.TimeZoneManager;
 
 import javax.sql.DataSource;
 import java.sql.*;
@@ -29,8 +29,8 @@ public class NewsletterDAO {
         subDaos.put(NewsletterType.PLAYER_JOIN_TOWN, new PlayerJoinTownDAO(dataSource));
         subDaos.put(NewsletterType.REGION_CREATED, new PlayerCreateRegionDAO(dataSource));
         subDaos.put(NewsletterType.REGION_DELETED, new PlayerDeleteRegionDAO(dataSource));
-        subDaos.put(NewsletterType.KINGDOM_CREATED, new PlayerCreateKingdomDAO(dataSource));
-        subDaos.put(NewsletterType.KINGDOM_DELETED, new PlayerDeleteKingdomDAO(dataSource));
+        subDaos.put(NewsletterType.NATION_CREATED, new PlayerCreateNationDAO(dataSource));
+        subDaos.put(NewsletterType.NATION_DELETED, new PlayerDeleteNationDAO(dataSource));
         subDaos.put(NewsletterType.TERRITORY_VASSAL_PROPOSAL, new TerritoryVassalProposalDAO(dataSource));
         subDaos.put(NewsletterType.TERRITORY_VASSAL_ACCEPTED, new TerritoryVassalAcceptedDAO(dataSource));
         subDaos.put(NewsletterType.TERRITORY_VASSAL_FORCED, new TerritoryVassalForcedDAO(dataSource));

@@ -3,8 +3,8 @@ package org.leralix.tan.gui.admin;
 import dev.triumphteam.gui.guis.GuiItem;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import org.leralix.tan.dataclass.territory.TerritoryData;
-import org.leralix.tan.dataclass.territory.TownData;
+import org.leralix.tan.data.territory.Territory;
+import org.leralix.tan.data.territory.Town;
 import org.leralix.tan.gui.cosmetic.IconKey;
 import org.leralix.tan.gui.user.territory.SelectNewOwnerForTownMenu;
 import org.leralix.tan.lang.Lang;
@@ -16,9 +16,9 @@ import java.util.List;
 
 public class AdminManageTown extends AdminManageTerritory {
 
-    private final TownData townData;
+    private final Town townData;
 
-    public AdminManageTown(Player player, TownData townData) {
+    public AdminManageTown(Player player, Town townData) {
         super(player, Lang.HEADER_ADMIN_SPECIFIC_REGION_MENU.get(townData.getName()), 3, townData);
         this.townData = townData;
         open();
@@ -32,17 +32,18 @@ public class AdminManageTown extends AdminManageTerritory {
         gui.setItem(2, 4, changeLeader());
         gui.setItem(2, 5, getChangeRegion());
 
-        gui.setItem(2, 6, getTransactionHistory());
+        gui.setItem(2, 6, getDonateTerritory());
+        gui.setItem(2, 7, getTransactionHistory());
         gui.setItem(2, 8, getDelete());
 
-        gui.setItem(3, 1, GuiUtil.createBackArrow(player, p -> new AdminBrowseTown(player)));
+        gui.setItem(3, 1, GuiUtil.createBackArrow(player, p -> new AdminBrowseTown(player), langType));
 
         gui.open(player);
     }
 
     private @NotNull GuiItem getChangeRegion() {
-        String name = townData.getOverlord()
-                .map(TerritoryData::getName)
+        String name = townData.getOverlordInternal()
+                .map(Territory::getName)
                 .orElseGet(() -> Lang.NO_REGION.get(langType));
 
         List<Lang> description = new ArrayList<>();

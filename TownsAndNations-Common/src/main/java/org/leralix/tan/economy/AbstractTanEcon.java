@@ -1,12 +1,14 @@
 package org.leralix.tan.economy;
 
-import org.leralix.tan.dataclass.ITanPlayer;
+import org.leralix.tan.data.player.ITanPlayer;
 
 public abstract class AbstractTanEcon {
 
     public abstract double getBalance(ITanPlayer tanPlayer);
 
-    public abstract boolean has(ITanPlayer tanPlayer, double amount);
+    public boolean has(ITanPlayer tanPlayer, double amount) {
+        return getBalance(tanPlayer) > amount;
+    }
 
     public abstract void withdrawPlayer(ITanPlayer tanPlayer, double amount);
 

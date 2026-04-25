@@ -5,13 +5,28 @@ import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import org.leralix.tan.dataclass.chunk.ClaimedChunk2;
-import org.leralix.tan.storage.stored.NewClaimedChunkStorage;
+import org.leralix.tan.TownsAndNations;
+import org.leralix.tan.data.chunk.IClaimedChunk;
+import org.leralix.tan.storage.stored.NationStorage;
+import org.leralix.tan.storage.stored.PlayerDataStorage;
+import org.leralix.tan.storage.stored.RegionStorage;
+import org.leralix.tan.storage.stored.TownStorage;
+import org.leralix.tan.utils.constants.Constants;
 
 public class PlayerLocationPvpEnabled extends PapiEntry {
 
-    public PlayerLocationPvpEnabled() {
-        super("player_location_pvp_enabled");
+    public PlayerLocationPvpEnabled(
+            PlayerDataStorage playerDataStorage,
+            TownStorage townStorage,
+            RegionStorage regionDataStorage,
+            NationStorage nationDataStorage
+    ) {
+        super("player_location_pvp_enabled",
+                playerDataStorage,
+                townStorage,
+                regionDataStorage,
+                nationDataStorage
+        );
     }
 
     @Override
@@ -25,11 +40,11 @@ public class PlayerLocationPvpEnabled extends PapiEntry {
 
         Location location = onlinePlayer.getLocation();
 
-        ClaimedChunk2 claimedChunk = NewClaimedChunkStorage.getInstance().get(location.getChunk());
+        IClaimedChunk claimedChunk = TownsAndNations.getPlugin().getClaimStorage().get(location.getChunk());
 
         return claimedChunk.canPVPHappen() ?
-                TRUE :
-                FALSE;
+                Constants.getTruePlaceholderString() :
+                Constants.getFalsePlaceholderString();
 
     }
 }

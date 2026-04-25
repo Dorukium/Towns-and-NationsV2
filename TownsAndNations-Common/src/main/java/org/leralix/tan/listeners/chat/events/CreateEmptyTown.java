@@ -1,16 +1,17 @@
 package org.leralix.tan.listeners.chat.events;
 
 import org.bukkit.entity.Player;
-import org.leralix.tan.dataclass.ITanPlayer;
-import org.leralix.tan.dataclass.territory.TownData;
+import org.leralix.tan.TownsAndNations;
+import org.leralix.tan.data.player.ITanPlayer;
+import org.leralix.tan.data.territory.Town;
 import org.leralix.tan.events.EventManager;
 import org.leralix.tan.events.events.TownCreatedInternalEvent;
 import org.leralix.tan.lang.Lang;
 import org.leralix.tan.listeners.chat.ChatListenerEvent;
-import org.leralix.tan.storage.stored.PlayerDataStorage;
-import org.leralix.tan.storage.stored.TownDataStorage;
+import org.leralix.tan.storage.stored.TownStorage;
 import org.leralix.tan.utils.constants.Constants;
 import org.leralix.tan.utils.file.FileUtil;
+import org.leralix.tan.utils.text.NameFilter;
 import org.leralix.tan.utils.text.TanChatUtils;
 
 import java.util.function.Consumer;
@@ -24,22 +25,28 @@ public class CreateEmptyTown extends ChatListenerEvent {
     }
 
     @Override
-    public boolean execute(Player player, String townName) {
+    public boolean execute(Player player, ITanPlayer playerData, String townName) {
+        int minSize = Constants.getPrefixSize().getMinVal();
         int maxSize = Constants.getTownMaxNameSize();
 
-        if (townName.length() > maxSize) {
-            TanChatUtils.message(player, Lang.MESSAGE_TOO_LONG.get(player, Integer.toString(maxSize)));
+        String safeTownName = townName == null ? "" : townName.trim();
+
+        if (!NameFilter.validateOrWarn(player, safeTownName, NameFilter.Scope.TOWN)) {
             return false;
         }
 
-        if (TownDataStorage.getInstance().isNameUsed(townName)) {
-            TanChatUtils.message(player, Lang.NAME_ALREADY_USED.get(player));
+        if (checkMessageLength(player, safeTownName, minSize, maxSize, playerData.getLang())){
             return false;
         }
 
-        TownData newTown = TownDataStorage.getInstance().newTown(townName);
+        TownStorage townStorage = TownsAndNations.getPlugin().getTownStorage();
+        if (townStorage.isNameUsed(safeTownName)) {
+            TanChatUtils.message(player, Lang.NAME_ALREADY_USED.get(playerData));
+            return false;
+        }
 
-        ITanPlayer playerData = PlayerDataStorage.getInstance().get(player);
+        Town newTown = townStorage.newTown(safeTownName);
+
         EventManager.getInstance().callEvent(new TownCreatedInternalEvent(newTown, playerData));
         FileUtil.addLineToHistory(Lang.TOWN_CREATED_NEWSLETTER.get(player.getName(), newTown.getName()));
 

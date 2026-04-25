@@ -1,0 +1,60 @@
+package org.leralix.tan.gui.admin;
+
+import dev.triumphteam.gui.guis.GuiItem;
+import org.bukkit.entity.Player;
+import org.leralix.tan.data.player.ITanPlayer;
+import org.leralix.tan.data.territory.Nation;
+import org.leralix.tan.data.territory.Region;
+import org.leralix.tan.data.territory.Territory;
+import org.leralix.tan.gui.IteratorGUI;
+import org.leralix.tan.lang.Lang;
+import org.leralix.tan.utils.file.FileUtil;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class NationChangeOwnership extends IteratorGUI {
+
+    private final Nation nationData;
+
+    public NationChangeOwnership(Player player, Nation nationData){
+        super(player, Lang.HEADER_CHANGE_OWNERSHIP, 6);
+        this.nationData = nationData;
+        open();
+    }
+
+    @Override
+    public void open() {
+        iterator(getCandidates(), p -> new AdminManageNation(player, nationData));
+        gui.open(player);
+    }
+
+    private List<GuiItem> getCandidates() {
+        ArrayList<GuiItem> guiItems = new ArrayList<>();
+        for (Territory territoryData : nationData.getVassalsInternal()) {
+            if (territoryData instanceof Region regionData) {
+                ITanPlayer regionLeader = regionData.getLeaderData();
+                if (regionLeader != null) {
+                    guiItems.add(
+                            iconManager.get(regionLeader.getOfflinePlayer())
+                                    .setName(regionLeader.getNameStored())
+                                    .setAction(action -> {
+                                        action.setCancelled(true);
+                                        new org.leralix.tan.gui.common.ConfirmMenu(
+                                                player,
+                                                Lang.GUI_CONFIRM_CHANGE_LEADER.get(regionLeader.getNameStored()),
+                                                () -> {
+                                                    FileUtil.addLineToHistory(Lang.REGION_DELETED_NEWSLETTER.get(player.getName(), nationData.getName()));
+                                                    nationData.setLeaderID(regionLeader.getID());
+                                                },
+                                                this::open
+                                        );
+                                    })
+                                    .asGuiItem(player, langType)
+                    );
+                }
+            }
+        }
+        return guiItems;
+    }
+}

@@ -5,8 +5,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.leralix.lib.utils.SoundUtil;
-import org.leralix.tan.dataclass.territory.TerritoryData;
-import org.leralix.tan.dataclass.territory.cosmetic.PlayerHeadIcon;
+import org.leralix.tan.data.territory.Territory;
+import org.leralix.tan.data.territory.cosmetic.PlayerHeadIcon;
 import org.leralix.tan.gui.IteratorGUI;
 import org.leralix.tan.lang.Lang;
 
@@ -18,9 +18,9 @@ import static org.leralix.lib.data.SoundEnum.MINOR_GOOD;
 
 public class SelectTerritoryHeadMenu extends IteratorGUI {
 
-    private final TerritoryData territoryData;
+    private final Territory territoryData;
 
-    protected SelectTerritoryHeadMenu(Player player, TerritoryData territoryData) {
+    protected SelectTerritoryHeadMenu(Player player, Territory territoryData) {
         super(player, Lang.HEADER_SELECT_ICON, 4);
 
         this.territoryData = territoryData;
@@ -30,16 +30,16 @@ public class SelectTerritoryHeadMenu extends IteratorGUI {
 
     @Override
     public void open() {
-        iterator(getHeads(), p -> territoryData.openMainMenu(player));
+        iterator(getHeads(), p -> territoryData.openMainMenu(player, tanPlayer));
         gui.open(player);
     }
 
     private List<GuiItem> getHeads() {
 
         ArrayList<GuiItem> guiItems = new ArrayList<>();
-        for (String playerID : territoryData.getPlayerIDList()) {
+        for (UUID playerID : territoryData.getPlayerIDList()) {
 
-            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(UUID.fromString(playerID));
+            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(playerID);
 
             guiItems.add(
                     iconManager
@@ -47,9 +47,9 @@ public class SelectTerritoryHeadMenu extends IteratorGUI {
                             .setName(offlinePlayer.getName())
                             .setClickToAcceptMessage(Lang.GUI_GENERIC_CLICK_TO_SELECT)
                             .setAction(action -> {
-                                territoryData.setIcon(new PlayerHeadIcon(offlinePlayer.getUniqueId().toString()));
+                                territoryData.setIcon(new PlayerHeadIcon(offlinePlayer.getUniqueId()));
                                 SoundUtil.playSound(player, MINOR_GOOD);
-                                territoryData.openMainMenu(player);
+                                territoryData.openMainMenu(player, tanPlayer);
                             })
                             .asGuiItem(player, langType)
             );

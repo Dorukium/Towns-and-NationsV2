@@ -2,6 +2,7 @@ package org.leralix.tan.gui.admin;
 
 import dev.triumphteam.gui.guis.GuiItem;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 import org.leralix.tan.gui.BasicGui;
 import org.leralix.tan.gui.cosmetic.IconKey;
 import org.leralix.tan.lang.Lang;
@@ -17,15 +18,24 @@ public class AdminMainMenu extends BasicGui {
     @Override
     public void open() {
 
-        gui.setItem(2, 2, getRegionButton());
-        gui.setItem(2, 3, getTownButton());
-        gui.setItem(2, 4, getPlayerButton());
+        gui.setItem(2, 2, getNationButton());
+        gui.setItem(2, 3, getRegionButton());
+        gui.setItem(2, 4, getTownButton());
+
+        gui.setItem(2, 6, getPlayerButton());
         gui.setItem(2, 7, getLandmarkButton());
         gui.setItem(2, 8, getWarButton());
 
-        gui.setItem(3, 1, GuiUtil.createBackArrow(player, p -> player.closeInventory()));
+        gui.setItem(3, 1, GuiUtil.createBackArrow(player, p -> player.closeInventory(), langType));
 
         gui.open(player);
+    }
+
+    private @NotNull GuiItem getPlayerButton() {
+        return iconManager.get(IconKey.PLAYER_HEAD_ICON)
+                .setName(Lang.GUI_ADMIN_PLAYER_ICON.get(langType))
+                .setAction(action -> new AdminBrowsePlayers(player))
+                .asGuiItem(player, langType);
     }
 
     private GuiItem getWarButton() {
@@ -35,18 +45,23 @@ public class AdminMainMenu extends BasicGui {
                 .asGuiItem(player, langType);
     }
 
+    private GuiItem getNationButton() {
+        if (!org.leralix.tan.utils.constants.Constants.enableNation()) {
+            return iconManager.get(IconKey.NATION_BASE_ICON)
+                    .setName(Lang.GUI_NATION_ICON.get(langType))
+                    .setDescription(Lang.GUI_WARNING_STILL_IN_DEV.get())
+                    .asGuiItem(player, langType);
+        }
+        return iconManager.get(IconKey.NATION_BASE_ICON)
+                .setName(Lang.GUI_NATION_ICON.get(langType))
+                .setAction(action -> new AdminBrowseNation(player))
+                .asGuiItem(player, langType);
+    }
 
     private GuiItem getLandmarkButton() {
         return iconManager.get(IconKey.TOWN_LANDMARKS_ICON)
                 .setName(Lang.ADMIN_GUI_LANDMARK_ICON.get(langType))
                 .setAction(action -> new AdminLandmarksMenu(player))
-                .asGuiItem(player, langType);
-    }
-
-    private GuiItem getPlayerButton() {
-        return iconManager.get(IconKey.PLAYER_HEAD_ICON)
-                .setName(Lang.GUI_ADMIN_PLAYER_ICON.get(langType))
-                .setAction(action -> new AdminBrowsePlayers(player))
                 .asGuiItem(player, langType);
     }
 

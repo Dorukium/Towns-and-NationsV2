@@ -1,21 +1,16 @@
 package org.leralix.tan.gui.admin;
 
-import dev.triumphteam.gui.builder.item.ItemBuilder;
 import dev.triumphteam.gui.guis.GuiItem;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.leralix.lib.utils.SoundUtil;
 import org.leralix.tan.TownsAndNations;
-import org.leralix.tan.dataclass.Landmark;
-import org.leralix.tan.dataclass.chunk.ClaimedChunk2;
-import org.leralix.tan.dataclass.chunk.LandmarkClaimedChunk;
+import org.leralix.tan.data.building.landmark.Landmark;
+import org.leralix.tan.data.chunk.IClaimedChunk;
+import org.leralix.tan.data.chunk.LandmarkClaimedChunk;
 import org.leralix.tan.gui.IteratorGUI;
 import org.leralix.tan.gui.cosmetic.IconKey;
 import org.leralix.tan.lang.Lang;
-import org.leralix.tan.storage.stored.LandmarkStorage;
-import org.leralix.tan.storage.stored.NewClaimedChunkStorage;
-import org.leralix.tan.utils.deprecated.HeadUtils;
 import org.leralix.tan.utils.text.TanChatUtils;
 
 import java.util.ArrayList;
@@ -46,13 +41,13 @@ public class AdminLandmarksMenu extends IteratorGUI {
                 .setName(Lang.ADMIN_GUI_CREATE_LANDMARK.get(langType))
                 .setClickToAcceptMessage(Lang.GUI_GENERIC_CLICK_TO_PROCEED)
                 .setAction(action -> {
-                    ClaimedChunk2 claimedChunk = NewClaimedChunkStorage.getInstance().get(player.getLocation().getBlock().getChunk());
+                    IClaimedChunk claimedChunk = TownsAndNations.getPlugin().getClaimStorage().get(player.getLocation().getBlock().getChunk());
 
                     if (claimedChunk instanceof LandmarkClaimedChunk) {
-                        TanChatUtils.message(player, Lang.ADMIN_CHUNK_ALREADY_LANDMARK.get(player));
+                        TanChatUtils.message(player, Lang.ADMIN_CHUNK_ALREADY_LANDMARK.get(langType));
                         return;
                     }
-                    Landmark newLandmark = LandmarkStorage.getInstance().addLandmark(player.getLocation());
+                    Landmark newLandmark = TownsAndNations.getPlugin().getLandmarkStorage().addLandmark(player.getLocation());
                     new AdminLandmarkMenu(player, newLandmark);
                 })
                 .asGuiItem(player, langType);
@@ -61,31 +56,30 @@ public class AdminLandmarksMenu extends IteratorGUI {
     private List<GuiItem> getLandmarks() {
         ArrayList<GuiItem> guiItems = new ArrayList<>();
 
-        for (Landmark landmark : LandmarkStorage.getInstance().getAll().values()) {
-            ItemStack icon = landmark.getIcon(langType);
-            HeadUtils.addLore(icon,
-                    "",
-                    Lang.CLICK_TO_OPEN_LANDMARK_MENU.get(langType),
-                    Lang.GUI_GENERIC_SHIFT_CLICK_TO_TELEPORT.get(langType));
+        for (Landmark landmark : TownsAndNations.getPlugin().getLandmarkStorage().getAll().values()) {
 
-            GuiItem item = ItemBuilder.from(icon).asGuiItem(event -> {
-                event.setCancelled(true);
-                if (!event.isShiftClick()) {
-                    new AdminLandmarkMenu(player, landmark);
-                } else {
-                    new BukkitRunnable() {
-                        @Override
-                        public void run() {
-                            player.closeInventory();
-                            player.teleport(landmark.getLocation());
-                        }
-                    }.runTaskLater(TownsAndNations.getPlugin(), 1L);
-
-
-                    SoundUtil.playSound(player, GOOD);
-                }
-            });
-            guiItems.add(item);
+            guiItems.add(landmark.getIcon(langType)
+                    .setClickToAcceptMessage(
+                            Lang.CLICK_TO_OPEN_LANDMARK_MENU,
+                            Lang.GUI_GENERIC_SHIFT_CLICK_TO_TELEPORT
+                    )
+                    .setAction(action -> {
+                                action.setCancelled(true);
+                                if (!action.isShiftClick()) {
+                                    new AdminLandmarkMenu(player, landmark);
+                                } else {
+                                    new BukkitRunnable() {
+                                        @Override
+                                        public void run() {
+                                            player.closeInventory();
+                                            player.teleport(landmark.getLocation());
+                                        }
+                                    }.runTaskLater(TownsAndNations.getPlugin(), 1L);
+                                    SoundUtil.playSound(player, GOOD);
+                                }
+                            }
+                    )
+                    .asGuiItem(player, langType));
         }
         return guiItems;
     }

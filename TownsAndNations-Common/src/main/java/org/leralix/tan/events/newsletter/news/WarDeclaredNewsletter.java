@@ -1,20 +1,19 @@
 package org.leralix.tan.events.newsletter.news;
 
-import dev.triumphteam.gui.builder.item.ItemBuilder;
 import dev.triumphteam.gui.guis.GuiItem;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.leralix.lib.data.SoundEnum;
-import org.leralix.tan.dataclass.territory.TerritoryData;
+import org.leralix.tan.data.player.ITanPlayer;
+import org.leralix.tan.data.territory.Territory;
 import org.leralix.tan.events.newsletter.NewsletterType;
+import org.leralix.tan.gui.cosmetic.IconManager;
 import org.leralix.tan.lang.Lang;
 import org.leralix.tan.lang.LangType;
-import org.leralix.tan.utils.deprecated.HeadUtils;
 import org.leralix.tan.utils.gameplay.TerritoryUtil;
 import org.leralix.tan.utils.text.DateUtil;
 import org.leralix.tan.utils.text.TanChatUtils;
-import org.tan.api.interfaces.TanTerritory;
+import org.tan.api.interfaces.territory.TanTerritory;
 
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -47,37 +46,39 @@ public class WarDeclaredNewsletter extends Newsletter {
 
     @Override
     public GuiItem createGuiItem(Player player, LangType lang, Consumer<Player> onClick) {
-        TerritoryData attackingTerritory = TerritoryUtil.getTerritory(attackingTerritoryID);
-        TerritoryData defendingTerritory = TerritoryUtil.getTerritory(defendingTerritoryID);
-        if(attackingTerritory == null || defendingTerritory == null)
+        Territory attackingTerritory = TerritoryUtil.getTerritory(attackingTerritoryID);
+        Territory defendingTerritory = TerritoryUtil.getTerritory(defendingTerritoryID);
+        if (attackingTerritory == null || defendingTerritory == null)
             return null;
 
-        ItemStack icon = HeadUtils.createCustomItemStack(Material.IRON_SWORD,
-                Lang.WAR_DECLARED_TITLE.get(lang),
-                Lang.NEWSLETTER_DATE.get(lang, DateUtil.getRelativeTimeDescription(lang, getDate())),
-                Lang.WAR_DECLARED.get(lang, attackingTerritory.getBaseColoredName(), defendingTerritory.getBaseColoredName()),
-                Lang.NEWSLETTER_RIGHT_CLICK_TO_MARK_AS_READ.getDefault());
-
-        return ItemBuilder.from(icon).asGuiItem(event -> {
-            event.setCancelled(true);
-            if(event.isRightClick()){
-                markAsRead(player);
-                onClick.accept(player);
-            }
-        });
+        return IconManager.getInstance().get(Material.IRON_SWORD)
+                .setName(Lang.WAR_DECLARED_TITLE.get(lang))
+                .setDescription(
+                        Lang.NEWSLETTER_DATE.get(DateUtil.getRelativeTimeDescription(lang, getDate())),
+                        Lang.WAR_DECLARED.get(attackingTerritory.getColoredName(), defendingTerritory.getColoredName())
+                )
+                .setClickToAcceptMessage(Lang.NEWSLETTER_RIGHT_CLICK_TO_MARK_AS_READ)
+                .setAction(action -> {
+                    action.setCancelled(true);
+                    if (action.isRightClick()) {
+                        markAsRead(player);
+                        onClick.accept(player);
+                    }
+                })
+                .asGuiItem(player, lang);
     }
 
     @Override
-    public GuiItem createConcernedGuiItem(Player player, LangType lang, Consumer<Player> onClick) {
+    public GuiItem createConcernedGuiItem(Player player, ITanPlayer playerData, LangType lang, Consumer<Player> onClick) {
         return createGuiItem(player, lang, onClick);
     }
 
     @Override
-    public boolean shouldShowToPlayer(Player player) {
-        TerritoryData attackingTerritory = TerritoryUtil.getTerritory(attackingTerritoryID);
+    public boolean shouldShowToPlayer(ITanPlayer player) {
+        Territory attackingTerritory = TerritoryUtil.getTerritory(attackingTerritoryID);
         if (attackingTerritory == null)
             return false;
-        TerritoryData defendingTerritory = TerritoryUtil.getTerritory(defendingTerritoryID);
+        Territory defendingTerritory = TerritoryUtil.getTerritory(defendingTerritoryID);
         if (defendingTerritory == null)
             return false;
         return attackingTerritory.isPlayerIn(player) || defendingTerritory.isPlayerIn(player);
@@ -89,17 +90,12 @@ public class WarDeclaredNewsletter extends Newsletter {
     }
 
     @Override
-    public void broadcast(Player player) {
-        TerritoryData attackingTerritory = TerritoryUtil.getTerritory(attackingTerritoryID);
-        TerritoryData defendingTerritory = TerritoryUtil.getTerritory(defendingTerritoryID);
-        if(attackingTerritory == null || defendingTerritory == null)
+    public void broadcast(Player player, ITanPlayer tanPlayer) {
+        Territory attackingTerritory = TerritoryUtil.getTerritory(attackingTerritoryID);
+        Territory defendingTerritory = TerritoryUtil.getTerritory(defendingTerritoryID);
+        if (attackingTerritory == null || defendingTerritory == null)
             return;
 
-        TanChatUtils.message(player, Lang.WAR_DECLARED.get(player, attackingTerritory.getBaseColoredName(), defendingTerritory.getBaseColoredName()), SoundEnum.WAR);
-    }
-
-    @Override
-    public void broadcastConcerned(Player player) {
-        broadcast(player);
+        TanChatUtils.message(player, Lang.WAR_DECLARED.get(tanPlayer, attackingTerritory.getColoredName(), defendingTerritory.getColoredName()), SoundEnum.WAR);
     }
 }

@@ -58,13 +58,13 @@ public class NewsletterEvents implements TanListener {
     }
 
     @EventHandler
-    public void onKingdomCreated(KingdomCreatedEvent event) {
-        newsletterStorage.register(new KingdomCreationNews(event.getKingdom(), event.getExecutor()));
+    public void onNationCreated(NationCreatedEvent event) {
+        newsletterStorage.register(new NationCreationNews(event.getNation(), event.getExecutor()));
     }
 
     @EventHandler
-    public void onKingdomDeleted(KingdomDeletedEvent event) {
-        newsletterStorage.register(new KingdomDeletedNews(event.getKingdom(), event.getExecutor()));
+    public void onNationDeleted(NationDeletedEvent event) {
+        newsletterStorage.register(new NationDeletedNews(event.getNation(), event.getExecutor()));
     }
 
     @EventHandler
@@ -110,7 +110,8 @@ public class NewsletterEvents implements TanListener {
     public void onWarDeclared(WarStartEvent event) {
         newsletterStorage.register(new WarDeclaredNewsletter(event.getAttacker(), event.getDefender()));
     }
-
+    
+    @EventHandler
     public void onWarEnd(WarEndEvent event) {
         newsletterStorage.register(new WarEndedNewsletter(event.getWinner(), event.getDefeated(), event.getAppliedWargoals().size()));
     }

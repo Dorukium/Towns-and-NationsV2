@@ -5,21 +5,20 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import org.leralix.tan.dataclass.PropertyData;
-import org.leralix.tan.dataclass.territory.TerritoryData;
-import org.leralix.tan.dataclass.territory.TownData;
+import org.leralix.tan.data.building.property.PropertyData;
+import org.leralix.tan.data.territory.Territory;
+import org.leralix.tan.data.territory.Town;
+import org.leralix.tan.data.upgrade.NewUpgradeStorage;
+import org.leralix.tan.data.upgrade.Upgrade;
 import org.leralix.tan.gui.cosmetic.IconManager;
 import org.leralix.tan.lang.Lang;
 import org.leralix.tan.lang.LangType;
-import org.leralix.tan.upgrade.NewUpgradeStorage;
-import org.leralix.tan.upgrade.Upgrade;
 import org.leralix.tan.utils.constants.Constants;
 import org.leralix.tan.utils.gameplay.TerritoryUtil;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Date;
 import java.util.Set;
 import java.util.UUID;
 
@@ -55,7 +54,7 @@ public abstract class AbstractTransaction {
     }
 
     protected String getTerritoryName(String id, LangType langType) {
-        TerritoryData territoryData = TerritoryUtil.getTerritory(id);
+        Territory territoryData = TerritoryUtil.getTerritory(id);
         if(territoryData == null){
             return Lang.TERRITORY_NOT_FOUND.get(langType);
         }
@@ -63,12 +62,12 @@ public abstract class AbstractTransaction {
     }
 
     protected String getPropertyName(String territoryID, String propertyID, LangType langType) {
-        TerritoryData territoryData = TerritoryUtil.getTerritory(territoryID);
+        Territory territoryData = TerritoryUtil.getTerritory(territoryID);
         if(territoryData == null){
             return Lang.TERRITORY_NOT_FOUND.get(langType);
         }
         // As of 0.16.1, Region canot have properties.
-        if(territoryData instanceof TownData townData){
+        if(territoryData instanceof Town townData){
             PropertyData propertyData = townData.getPropertyDataMap().get(propertyID);
             if(propertyData == null){
                 return Lang.PROPERTY_NOT_FOUND.get(langType);
@@ -79,7 +78,7 @@ public abstract class AbstractTransaction {
     }
 
     protected String getUpgradeName(String territoryID, String upgradeID, LangType langType) {
-        TerritoryData territoryData = TerritoryUtil.getTerritory(territoryID);
+        Territory territoryData = TerritoryUtil.getTerritory(territoryID);
         NewUpgradeStorage upgradeStorage = Constants.getUpgradeStorage();
         if(territoryData == null){
             return Lang.TERRITORY_NOT_FOUND.get(langType);
@@ -97,7 +96,7 @@ public abstract class AbstractTransaction {
      * @return  The name of the ID with the correct color code.
      */
     protected @NotNull String getColoredName(String id, LangType langType){
-        if(id.startsWith("T") || id.startsWith("R") || id.startsWith("K")){
+        if(id.startsWith("T") || id.startsWith("R") || id.startsWith("N")){
             return getTerritoryName(id, langType);
         }
         else {

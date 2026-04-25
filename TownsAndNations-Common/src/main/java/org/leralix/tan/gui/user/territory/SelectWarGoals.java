@@ -3,27 +3,26 @@ package org.leralix.tan.gui.user.territory;
 import dev.triumphteam.gui.guis.GuiItem;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import org.leralix.tan.dataclass.territory.TerritoryData;
+import org.leralix.tan.data.territory.Territory;
 import org.leralix.tan.gui.BasicGui;
 import org.leralix.tan.gui.IteratorGUI;
 import org.leralix.tan.gui.cosmetic.IconKey;
-import org.leralix.tan.gui.user.war.WarMenu;
 import org.leralix.tan.lang.Lang;
 import org.leralix.tan.war.War;
-import org.leralix.tan.war.legacy.WarRole;
-import org.leralix.tan.war.legacy.wargoals.WarGoal;
+import org.leralix.tan.war.info.WarRole;
+import org.leralix.tan.war.wargoals.WarGoal;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class SelectWarGoals extends IteratorGUI {
 
-    private final TerritoryData territoryData;
+    private final Territory territoryData;
     private final War war;
     private final WarRole warRole;
     private final BasicGui returnGui;
 
-    public SelectWarGoals(Player player, TerritoryData territoryData, War war, WarRole warRole, BasicGui returnGui) {
+    public SelectWarGoals(Player player, Territory territoryData, War war, WarRole warRole, BasicGui returnGui) {
         super(player, Lang.HEADER_SELECT_WARGOAL, 3);
         this.territoryData = territoryData;
         this.war = war;

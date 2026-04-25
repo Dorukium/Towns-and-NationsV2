@@ -1,15 +1,13 @@
 package org.leralix.tan.api.internal.managers;
 
-import org.leralix.tan.api.internal.wrappers.RegionDataWrapper;
-import org.leralix.tan.api.internal.wrappers.KingdomDataWrapper;
-import org.leralix.tan.api.internal.wrappers.TownDataWrapper;
-import org.leralix.tan.storage.stored.KingdomDataStorage;
-import org.leralix.tan.storage.stored.RegionDataStorage;
-import org.leralix.tan.storage.stored.TownDataStorage;
+import org.leralix.tan.storage.stored.NationStorage;
+import org.leralix.tan.storage.stored.RegionStorage;
+import org.leralix.tan.storage.stored.TownStorage;
+import org.leralix.tan.storage.stored.json.RegionDataStorage;
 import org.tan.api.getters.TanTerritoryManager;
-import org.tan.api.interfaces.TanKingdom;
-import org.tan.api.interfaces.TanRegion;
-import org.tan.api.interfaces.TanTown;
+import org.tan.api.interfaces.territory.TanNation;
+import org.tan.api.interfaces.territory.TanRegion;
+import org.tan.api.interfaces.territory.TanTown;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -17,34 +15,24 @@ import java.util.Optional;
 /**
  * Placeholder for TanTerritoryManager <br>
  * This allows a single entry point for all territory related operations, It
- * stores the instance of both the {@link TownDataStorage}
+ * stores the instance of both the {@link TownStorage}
  * and {@link RegionDataStorage}
  */
 public class TerritoryManager implements TanTerritoryManager {
-    private final TownDataStorage townDataStorageInstance;
-    private final RegionDataStorage regionDataStorageInstance;
-    private final KingdomDataStorage kingdomDataStorageInstance;
+    private final TownStorage townStorageInstance;
+    private final RegionStorage regionStorageInstance;
+    private final NationStorage nationStorageInstance;
 
-    private static TerritoryManager instance;
-
-    private TerritoryManager() {
-        townDataStorageInstance = TownDataStorage.getInstance();
-        regionDataStorageInstance = RegionDataStorage.getInstance();
-        kingdomDataStorageInstance = KingdomDataStorage.getInstance();
-    }
-
-    public static TerritoryManager getInstance() {
-        if (instance == null) {
-            instance = new TerritoryManager();
-        }
-        return instance;
+    public TerritoryManager(TownStorage townStorage, RegionStorage regionStorage, NationStorage nationStorage) {
+        townStorageInstance = townStorage;
+        regionStorageInstance = regionStorage;
+        nationStorageInstance = nationStorage;
     }
 
 
     @Override
     public Optional<TanTown> getTown(String uuid) {
-        TownDataWrapper townDataWrapper = TownDataWrapper.of(townDataStorageInstance.get(uuid));
-        return Optional.ofNullable(townDataWrapper);
+        return Optional.ofNullable(townStorageInstance.get(uuid));
     }
 
     @Override
@@ -54,16 +42,14 @@ public class TerritoryManager implements TanTerritoryManager {
 
     @Override
     public Collection<TanTown> getTowns() {
-        return townDataStorageInstance.getAll().values().stream()
-                .map(TownDataWrapper::of)
+        return townStorageInstance.getAll().values().stream()
                 .map(t -> (TanTown) t)
                 .toList();
     }
 
     @Override
     public Optional<TanRegion> getRegion(String uuid) {
-        RegionDataWrapper regionDataWrapper = RegionDataWrapper.of(regionDataStorageInstance.get(uuid));
-        return Optional.ofNullable(regionDataWrapper);
+        return Optional.ofNullable(regionStorageInstance.get(uuid));
     }
 
     @Override
@@ -73,28 +59,25 @@ public class TerritoryManager implements TanTerritoryManager {
 
     @Override
     public Collection<TanRegion> getRegions() {
-        return regionDataStorageInstance.getAll().values().stream()
-                .map(RegionDataWrapper::of)
+        return regionStorageInstance.getAll().values().stream()
                 .map(TanRegion.class::cast)
                 .toList();
     }
 
     @Override
-    public Optional<TanKingdom> getKingdom(String kingdomID) {
-        KingdomDataWrapper wrapper = KingdomDataWrapper.of(kingdomDataStorageInstance.get(kingdomID));
-        return Optional.ofNullable(wrapper);
+    public Optional<TanNation> getNation(String nationID) {
+        return Optional.ofNullable(nationStorageInstance.get(nationID));
     }
 
     @Override
-    public Optional<TanKingdom> getKingdomByName(String kingdomName) {
+    public Optional<TanNation> getNationByName(String nationName) {
         return Optional.empty();
     }
 
     @Override
-    public Collection<TanKingdom> getKingdoms() {
-        return kingdomDataStorageInstance.getAll().values().stream()
-                .map(KingdomDataWrapper::of)
-                .map(TanKingdom.class::cast)
+    public Collection<TanNation> getNations() {
+        return nationStorageInstance.getAll().values().stream()
+                .map(TanNation.class::cast)
                 .toList();
     }
 }

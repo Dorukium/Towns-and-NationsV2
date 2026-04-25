@@ -3,7 +3,7 @@ package org.leralix.tan.gui.user.property;
 import dev.triumphteam.gui.guis.GuiItem;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
-import org.leralix.tan.dataclass.PropertyData;
+import org.leralix.tan.data.building.property.PropertyData;
 import org.leralix.tan.gui.BasicGui;
 import org.leralix.tan.gui.common.ConfirmMenu;
 import org.leralix.tan.gui.cosmetic.IconKey;
@@ -14,6 +14,8 @@ import org.leralix.tan.listeners.chat.events.ChangePropertyDescription;
 import org.leralix.tan.listeners.chat.events.ChangePropertyName;
 import org.leralix.tan.listeners.chat.events.ChangePropertyRentPrice;
 import org.leralix.tan.listeners.chat.events.ChangePropertySalePrice;
+import org.leralix.tan.listeners.interact.RightClickListener;
+import org.leralix.tan.listeners.interact.events.property.RelocateSignEvent;
 import org.leralix.tan.utils.text.NumberUtil;
 import org.leralix.tan.utils.text.TanChatUtils;
 
@@ -32,7 +34,7 @@ public abstract class PropertyMenus extends BasicGui {
     protected GuiItem getPropertyIcon() {
         return iconManager.get(propertyData.getIcon())
                 .setName(propertyData.getName())
-                .setDescription(propertyData.getBasicDescription())
+                .setDescription(propertyData.getBasicDescription(langType))
                 .asGuiItem(player, langType);
     }
 
@@ -43,7 +45,7 @@ public abstract class PropertyMenus extends BasicGui {
                 .setClickToAcceptMessage(Lang.GUI_GENERIC_CLICK_TO_RENAME)
                 .setAction(action -> {
                     TanChatUtils.message(player, Lang.ENTER_NEW_VALUE.get(langType));
-                    PlayerChatListenerStorage.register(player, new ChangePropertyName(propertyData, p -> open()));
+                    PlayerChatListenerStorage.register(player, langType, new ChangePropertyName(propertyData, p -> open()));
                 })
                 .asGuiItem(player, langType);
     }
@@ -55,7 +57,7 @@ public abstract class PropertyMenus extends BasicGui {
                 .setClickToAcceptMessage(Lang.GUI_GENERIC_CLICK_TO_RENAME)
                 .setAction(action -> {
                     TanChatUtils.message(player, Lang.ENTER_NEW_VALUE.get(langType));
-                    PlayerChatListenerStorage.register(player, new ChangePropertyDescription(propertyData, p -> open()));
+                    PlayerChatListenerStorage.register(player, langType, new ChangePropertyDescription(propertyData, p -> open()));
                 })
                 .asGuiItem(player, langType);
     }
@@ -93,7 +95,7 @@ public abstract class PropertyMenus extends BasicGui {
                 .setAction(event -> {
                     if (event.getClick() == ClickType.RIGHT) {
                         TanChatUtils.message(player, Lang.ENTER_NEW_VALUE.get(langType));
-                        PlayerChatListenerStorage.register(player, new ChangePropertySalePrice(propertyData, p -> open()));
+                        PlayerChatListenerStorage.register(player, langType, new ChangePropertySalePrice(propertyData, p -> open()));
                     } else if (event.getClick() == ClickType.LEFT) {
                         if (propertyData.isRented()) {
                             TanChatUtils.message(player, Lang.PROPERTY_ALREADY_RENTED.get(langType));
@@ -128,7 +130,7 @@ public abstract class PropertyMenus extends BasicGui {
                 .setAction(event -> {
                     if (event.getClick() == ClickType.RIGHT) {
                         TanChatUtils.message(player, Lang.ENTER_NEW_VALUE.get(langType));
-                        PlayerChatListenerStorage.register(player, new ChangePropertyRentPrice(propertyData, p -> open()));
+                        PlayerChatListenerStorage.register(player, langType, new ChangePropertyRentPrice(propertyData, p -> open()));
                     } else if (event.getClick() == ClickType.LEFT) {
                         if (propertyData.isRented()) {
                             TanChatUtils.message(player, Lang.PROPERTY_ALREADY_RENTED.get(langType));
@@ -161,7 +163,8 @@ public abstract class PropertyMenus extends BasicGui {
 
     protected GuiItem getAuthorizedPlayersButton() {
 
-        boolean isRentedAndPlayerIsNotRenter = propertyData.isRented() && !propertyData.getRenter().equals(tanPlayer);
+        var optRenter = propertyData.getRenter();
+        boolean isRentedAndPlayerIsNotRenter = propertyData.isRented() && optRenter.isPresent() && !optRenter.get().equals(tanPlayer);
 
         return iconManager.get(IconKey.AUTHORIZED_PLAYERS_ICON)
                 .setName(Lang.GUI_PROPERTY_PLAYER_LIST.get(langType))
@@ -183,18 +186,37 @@ public abstract class PropertyMenus extends BasicGui {
 
     protected GuiItem getKickRenterButton() {
         return iconManager.get(propertyData.getOfflineRenter())
-                .setName(Lang.GUI_PROPERTY_RENTED_BY.get(langType, propertyData.getRenter().getNameStored()))
+                .setName(Lang.GUI_PROPERTY_RENTED_BY.get(langType, propertyData.getRenterDisplayName(langType)))
                 .setDescription(Lang.GUI_PROPERTY_RIGHT_CLICK_TO_EXPEL_RENTER.get())
                 .setAction(event -> {
                     event.setCancelled(true);
 
-                    Player renter = propertyData.getRenterPlayer();
+                    Player renterPlayer = propertyData.getRenterPlayer();
                     propertyData.expelRenter(false);
 
                     TanChatUtils.message(player, Lang.PROPERTY_RENTER_EXPELLED_OWNER_SIDE.get(langType), MINOR_GOOD);
-                    TanChatUtils.message(renter, Lang.PROPERTY_RENTER_EXPELLED_RENTER_SIDE.get(renter, propertyData.getName()), MINOR_BAD);
+                    if (renterPlayer != null) {
+                        TanChatUtils.message(renterPlayer, Lang.PROPERTY_RENTER_EXPELLED_RENTER_SIDE.get(propertyData.getName()), MINOR_BAD);
+                    }
 
                     open();
+                })
+                .asGuiItem(player, langType);
+    }
+
+    protected GuiItem getRelocateSignButton() {
+
+        FilledLang description = propertyData.getSign().isEmpty() ?
+                Lang.GUI_PROPERTY_RELOCATE_SIGN_DESC1_NO_SIGN.get() :
+                Lang.GUI_PROPERTY_RELOCATE_SIGN_DESC1.get(propertyData.getSignLocation().toString());
+
+        return iconManager.get(IconKey.RELOCATE_SIGN_ICON)
+                .setName(Lang.GUI_PROPERTY_RELOCATE_SIGN.get(langType))
+                .setDescription(description)
+                .setClickToAcceptMessage(Lang.GUI_GENERIC_CLICK_TO_PROCEED)
+                .setAction(event -> {
+                    player.closeInventory();
+                    RightClickListener.register(player, langType, new RelocateSignEvent(propertyData, langType, this));
                 })
                 .asGuiItem(player, langType);
     }

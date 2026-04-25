@@ -1,20 +1,19 @@
 package org.leralix.tan.events.newsletter.news;
 
-import dev.triumphteam.gui.builder.item.ItemBuilder;
 import dev.triumphteam.gui.guis.GuiItem;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.leralix.lib.data.SoundEnum;
-import org.leralix.tan.dataclass.territory.TerritoryData;
+import org.leralix.tan.data.player.ITanPlayer;
+import org.leralix.tan.data.territory.Territory;
 import org.leralix.tan.events.newsletter.NewsletterType;
+import org.leralix.tan.gui.cosmetic.IconManager;
 import org.leralix.tan.lang.Lang;
 import org.leralix.tan.lang.LangType;
-import org.leralix.tan.utils.deprecated.HeadUtils;
 import org.leralix.tan.utils.gameplay.TerritoryUtil;
 import org.leralix.tan.utils.text.DateUtil;
 import org.leralix.tan.utils.text.TanChatUtils;
-import org.tan.api.interfaces.TanTerritory;
+import org.tan.api.interfaces.territory.TanTerritory;
 
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -52,38 +51,39 @@ public class WarEndedNewsletter extends Newsletter {
 
     @Override
     public GuiItem createGuiItem(Player player, LangType lang, Consumer<Player> onClick) {
-        TerritoryData winningTerritory = TerritoryUtil.getTerritory(winningTerritoryID);
-        TerritoryData defeatedTerritory = TerritoryUtil.getTerritory(defeatedTerritoryID);
-        if(winningTerritory == null || defeatedTerritory == null)
+        Territory winningTerritory = TerritoryUtil.getTerritory(winningTerritoryID);
+        Territory defeatedTerritory = TerritoryUtil.getTerritory(defeatedTerritoryID);
+        if (winningTerritory == null || defeatedTerritory == null)
             return null;
 
-        ItemStack icon = HeadUtils.createCustomItemStack(Material.SHIELD,
-                Lang.WAR_ENDED_TITLE.get(lang),
-                Lang.NEWSLETTER_DATE.get(lang, DateUtil.getRelativeTimeDescription(lang, getDate())),
-                Lang.WAR_ENDED.get(
-                        lang,
-                        winningTerritory.getBaseColoredName(),
-                        defeatedTerritory.getBaseColoredName(),
-                        Integer.toString(nbAppliedWargoals)
-                ),
-                Lang.NEWSLETTER_RIGHT_CLICK_TO_MARK_AS_READ.getDefault());
-
-        return ItemBuilder.from(icon).asGuiItem(event -> {
-            event.setCancelled(true);
-            if(event.isRightClick()){
-                markAsRead(player);
-                onClick.accept(player);
-            }
-        });
+        return IconManager.getInstance().get(Material.SHIELD)
+                .setName(Lang.WAR_ENDED_TITLE.get(lang))
+                .setDescription(
+                        Lang.NEWSLETTER_DATE.get(DateUtil.getRelativeTimeDescription(lang, getDate())),
+                        Lang.WAR_ENDED.get(
+                                winningTerritory.getColoredName(),
+                                defeatedTerritory.getColoredName(),
+                                Integer.toString(nbAppliedWargoals)
+                        )
+                )
+                .setAction(action -> {
+                            action.setCancelled(true);
+                            if (action.isRightClick()) {
+                                markAsRead(player);
+                                onClick.accept(player);
+                            }
+                        }
+                )
+                .asGuiItem(player, lang);
     }
 
     @Override
-    public GuiItem createConcernedGuiItem(Player player, LangType lang, Consumer<Player> onClick) {
+    public GuiItem createConcernedGuiItem(Player player, ITanPlayer playerData, LangType lang, Consumer<Player> onClick) {
         return createGuiItem(player, lang, onClick);
     }
 
     @Override
-    public boolean shouldShowToPlayer(Player player) {
+    public boolean shouldShowToPlayer(ITanPlayer player) {
         return true;
     }
 
@@ -93,23 +93,18 @@ public class WarEndedNewsletter extends Newsletter {
     }
 
     @Override
-    public void broadcast(Player player) {
-        TerritoryData winningTerritory = TerritoryUtil.getTerritory(winningTerritoryID);
-        TerritoryData defeatedTerritory = TerritoryUtil.getTerritory(defeatedTerritoryID);
-        if(winningTerritory == null || defeatedTerritory == null)
+    public void broadcast(Player player, ITanPlayer tanPlayer) {
+        Territory winningTerritory = TerritoryUtil.getTerritory(winningTerritoryID);
+        Territory defeatedTerritory = TerritoryUtil.getTerritory(defeatedTerritoryID);
+        if (winningTerritory == null || defeatedTerritory == null)
             return;
 
         TanChatUtils.message(player,
-                Lang.ATTACK_ENDED.get(
-                        player,
-                        winningTerritory.getBaseColoredName(),
-                        defeatedTerritory.getBaseColoredName(),
+                Lang.WAR_ENDED.get(
+                        tanPlayer,
+                        winningTerritory.getColoredName(),
+                        defeatedTerritory.getColoredName(),
                         Integer.toString(nbAppliedWargoals)
                 ), SoundEnum.MINOR_LEVEL_UP);
-    }
-
-    @Override
-    public void broadcastConcerned(Player player) {
-        broadcast(player);
     }
 }

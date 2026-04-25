@@ -2,9 +2,7 @@ package org.leralix.tan.storage;
 
 import org.bukkit.Chunk;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.leralix.lib.utils.config.ConfigTag;
-import org.leralix.lib.utils.config.ConfigUtil;
-import org.leralix.tan.dataclass.chunk.ClaimedChunk2;
+import org.leralix.tan.data.chunk.ChunkData;
 import org.leralix.tan.storage.blacklist.BlackListWorld;
 import org.leralix.tan.storage.blacklist.BlackListZone;
 import org.leralix.tan.storage.blacklist.IBlackList;
@@ -22,9 +20,8 @@ public class ClaimBlacklistStorage {
 
     private static List<IBlackList> blacklist;
 
-    public static void init() {
+    public static void init(FileConfiguration config) {
         blacklist = new ArrayList<>();
-        FileConfiguration config = ConfigUtil.getCustomConfig(ConfigTag.MAIN);
         for (Object item : config.getList("claimBlacklist", Collections.emptyList())){
             if (item instanceof Map<?, ?> map) {
                 String name = (String) map.get("name");
@@ -55,7 +52,7 @@ public class ClaimBlacklistStorage {
         return false;
     }
 
-    public static boolean cannotBeClaimed(ClaimedChunk2 claimedChunk) {
+    public static boolean cannotBeClaimed(ChunkData claimedChunk) {
         return cannotBeClaimed(claimedChunk.getChunk());
     }
 

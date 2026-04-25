@@ -4,16 +4,25 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.leralix.lib.data.SoundEnum;
 import org.leralix.lib.utils.SoundUtil;
+import org.leralix.tan.data.player.ITanPlayer;
 import org.leralix.tan.lang.FilledLang;
 import org.leralix.tan.lang.Lang;
+import org.leralix.tan.lang.LangType;
+import org.leralix.tan.storage.stored.PlayerDataStorage;
 
 /**
  * This class is used for chat related utilities.
  */
 public class TanChatUtils {
 
+    private static PlayerDataStorage playerDataStorage;
+
     private TanChatUtils() {
         throw new IllegalStateException("Utility class");
+    }
+
+    public static void init(PlayerDataStorage playerDataStorageInstance){
+        playerDataStorage = playerDataStorageInstance;
     }
 
 
@@ -28,9 +37,12 @@ public class TanChatUtils {
         }
 
         if (commandSender instanceof Player player) {
-            message(player, message.get(player), soundEnum);
+            ITanPlayer playerData = playerDataStorage.get(player);
+            message(player, message.get(playerData), soundEnum);
         }
-        commandSender.sendMessage(message.getDefault());
+        else {
+            commandSender.sendMessage(message.getDefault());
+        }
     }
 
     public static void message(CommandSender commandSender, FilledLang message) {
@@ -39,7 +51,8 @@ public class TanChatUtils {
 
     public static void message(CommandSender commandSender, FilledLang message, SoundEnum soundEnum) {
         if (commandSender instanceof Player player) {
-            message(player, message.get(player), soundEnum);
+            LangType langType = playerDataStorage.get(player).getLang();
+            message(player, message.get(langType), soundEnum);
         }
         else if(commandSender != null){
             commandSender.sendMessage(message.getDefault());

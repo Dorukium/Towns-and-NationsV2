@@ -6,28 +6,25 @@ import org.leralix.lib.position.Vector2D;
 import org.leralix.lib.position.Vector3D;
 import org.leralix.lib.utils.particles.ParticleUtils;
 import org.leralix.tan.TownsAndNations;
-import org.leralix.tan.war.info.BoundaryType;
-import org.leralix.tan.dataclass.ITanPlayer;
-import org.leralix.tan.dataclass.chunk.ClaimedChunk2;
-import org.leralix.tan.dataclass.chunk.TerritoryChunk;
-import org.leralix.tan.enums.TownRelation;
-import org.leralix.tan.storage.stored.NewClaimedChunkStorage;
-import org.leralix.tan.storage.stored.PlayerDataStorage;
+import org.leralix.tan.data.chunk.IClaimedChunk;
+import org.leralix.tan.data.chunk.TerritoryChunk;
+import org.leralix.tan.data.player.ITanPlayer;
+import org.leralix.tan.data.territory.relation.TownRelation;
 import org.leralix.tan.utils.constants.Constants;
 import org.leralix.tan.utils.territory.ChunkUtil;
+import org.leralix.tan.war.info.BoundaryType;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class ShowBoundaries {
 
-
-    public static void display(Player player) {
+    public static void display(Player player, ITanPlayer tanPlayer) {
 
         double radius = Constants.getWarBoundaryRadius();
-        List<ClaimedChunk2> chunkInRange = ChunkUtil.getChunksInRadius(player.getChunk(), radius);
+        List<IClaimedChunk> chunkInRange = ChunkUtil.getChunksInRadius(player.getChunk(), radius);
 
-        ITanPlayer tanPlayer = PlayerDataStorage.getInstance().get(player);
         List<ChunkLine> lines = sortChunkLines(chunkInRange, tanPlayer);
 
         drawLines(player, lines);
@@ -46,20 +43,20 @@ public class ShowBoundaries {
         }
     }
 
-    static List<ChunkLine> sortChunkLines(List<ClaimedChunk2> chunkInRange, ITanPlayer tanPlayer) {
+    static List<ChunkLine> sortChunkLines(List<IClaimedChunk> chunkInRange, ITanPlayer tanPlayer) {
         List<ChunkLine> res = new ArrayList<>();
 
-        for (ClaimedChunk2 centerChunk : chunkInRange) {
+        for (IClaimedChunk centerChunk : chunkInRange) {
             if (centerChunk instanceof TerritoryChunk centerTerritoryChunk) {
 
-                TownRelation townRelation = centerTerritoryChunk.getOccupier().getWorstRelationWith(tanPlayer);
+                TownRelation townRelation = centerTerritoryChunk.getOccupierInternal().getWorstRelationWith(tanPlayer);
                 BoundaryType type = townRelation.getBoundaryType();
                 Vector2D centerChunkPosition = centerChunk.getVector2D();
 
-                var claimStorage = NewClaimedChunkStorage.getInstance();
+                var claimStorage = TownsAndNations.getPlugin().getClaimStorage();
 
                 // NORTH
-                ClaimedChunk2 northChunk = claimStorage
+                IClaimedChunk northChunk = claimStorage
                         .get(
                                 centerChunkPosition.getX(),
                                 centerChunkPosition.getZ() - 1,
@@ -71,7 +68,7 @@ public class ShowBoundaries {
                 }
 
                 // SOUTH
-                ClaimedChunk2 southChunk = claimStorage
+                IClaimedChunk southChunk = claimStorage
                         .get(
                                 centerChunkPosition.getX(),
                                 centerChunkPosition.getZ() + 1,
@@ -82,7 +79,7 @@ public class ShowBoundaries {
                 }
 
                 // EAST
-                ClaimedChunk2 eastChunk = NewClaimedChunkStorage.getInstance()
+                IClaimedChunk eastChunk = TownsAndNations.getPlugin().getClaimStorage()
                         .get(
                                 centerChunkPosition.getX() + 1,
                                 centerChunkPosition.getZ(),
@@ -93,7 +90,7 @@ public class ShowBoundaries {
                 }
 
                 // WEST
-                ClaimedChunk2 westChunk = NewClaimedChunkStorage.getInstance()
+                IClaimedChunk westChunk = TownsAndNations.getPlugin().getClaimStorage()
                         .get(
                                 centerChunkPosition.getX() - 1,
                                 centerChunkPosition.getZ(),
@@ -107,11 +104,19 @@ public class ShowBoundaries {
         return res;
     }
 
-    private static boolean isDifferentTerritory(TerritoryChunk centerChunk, ClaimedChunk2 otherChunk) {
+    private static boolean isDifferentTerritory(TerritoryChunk centerChunk, IClaimedChunk otherChunk) {
 
         if(otherChunk instanceof TerritoryChunk otherTerritoryChunk){
-            var centerTerritory = centerChunk.getOccupier();
-            var otherTerritory = otherTerritoryChunk.getOccupier();
+            var centerTerritory = centerChunk.getOccupierInternal();
+            var otherTerritory = otherTerritoryChunk.getOccupierInternal();
+
+            if (centerTerritory == null || otherTerritory == null) {
+                return true;
+            }
+
+            if (Objects.equals(centerTerritory.getID(), otherTerritory.getID())) {
+                return false;
+            }
 
             return centerTerritory.getRelationWith(otherTerritory) != TownRelation.SELF;
         }
@@ -125,7 +130,9 @@ public class ShowBoundaries {
 
         String worldID = centerChunk.getWorldID().toString();
 
-        Vector2D start, end;
+        Vector2D start;
+        Vector2D end;
+
         switch (dir) {
             case NORTH -> {
                 start = new Vector2D(baseX, baseZ, worldID);

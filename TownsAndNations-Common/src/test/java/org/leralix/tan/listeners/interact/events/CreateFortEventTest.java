@@ -9,11 +9,9 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.leralix.tan.BasicTest;
-import org.leralix.tan.dataclass.ITanPlayer;
-import org.leralix.tan.dataclass.territory.TownData;
-import org.leralix.tan.storage.impl.FortDataStorage;
-import org.leralix.tan.storage.stored.PlayerDataStorage;
-import org.leralix.tan.storage.stored.TownDataStorage;
+import org.leralix.tan.TownsAndNations;
+import org.leralix.tan.data.player.ITanPlayer;
+import org.leralix.tan.data.territory.Town;
 import org.mockbukkit.mockbukkit.entity.PlayerMock;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -28,7 +26,7 @@ class CreateFortEventTest extends BasicTest {
     }
 
     /**
-     * Event where a player create a fort inside a claimed chunk.
+     * Event where a player creates a fort inside a claimed chunk.
      */
     @Test
     void nominalTest(){
@@ -38,15 +36,15 @@ class CreateFortEventTest extends BasicTest {
 
         world.setBlockData(-1, 1, -1, Bukkit.createBlockData(Material.AIR));
 
-        ITanPlayer tanPlayer = PlayerDataStorage.getInstance().get(player);
+        ITanPlayer tanPlayer = playerDataStorage.get(player);
 
-        TownData townData = TownDataStorage.getInstance().newTown("town", tanPlayer);
+        Town townData = townStorage.newTown("town", tanPlayer);
         townData.addToBalance(5000.);
 
-        CreateFortEvent createfortEvent = new CreateFortEvent(townData);
+        CreateFortEvent createfortEvent = new CreateFortEvent(townData, tanPlayer);
         createfortEvent.execute(new PlayerInteractEvent(player, Action.RIGHT_CLICK_BLOCK, null, world.getBlockAt(-1,0,-1), BlockFace.UP));
 
-        assertEquals(1, FortDataStorage.getInstance().getOwnedFort(townData).size());
+        assertEquals(1, TownsAndNations.getPlugin().getFortStorage().getOwnedFort(townData).size());
     }
 
 
